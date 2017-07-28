@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include "fs_utils.h"
 
 #define MAX_PARAMS 3
 
@@ -25,6 +26,7 @@ int readCommand(char** comando)
       //cerco di inserire i dati nell'array dei parametri (se c'è spazio)
       if(clen < MAX_PARAMS)
       {
+        str[len] = '\0';
         comando[clen++] = str;
       }
       else
@@ -40,6 +42,7 @@ int readCommand(char** comando)
   //Prendo l'ultimo parametro prima di EOF
   if(clen < MAX_PARAMS)
   {
+    str[len] = '\0';
     comando[clen++] = str;
   }
 
@@ -60,5 +63,5 @@ int main(void)
     //Leggo il prossimo comando
     count = readCommand(comando);
   } while(count > 0 && strcmp(comando[0], "exit"));
-  return -1;
+  return 1;
 }

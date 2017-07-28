@@ -1,0 +1,9 @@
+TEST = test.c fs_utils.c
+
+default: all
+
+all:
+	gcc -DEVAL -static -std=c99 -O2 $(TEST) -lm -o test
+
+run:
+	test $(ARGS)

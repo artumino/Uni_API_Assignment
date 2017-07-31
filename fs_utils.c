@@ -7,6 +7,9 @@
 int fs_write(node_t* root, char* percorso, char* contenuto)
 {
   node_t* child;
+  if(*percorso == '/')
+    percorso += sizeof(char);
+
   if(*percorso == '\0')
   {
     //Trovato elemento
@@ -14,7 +17,7 @@ int fs_write(node_t* root, char* percorso, char* contenuto)
 
   //Calcolo hash del file per la ricerca binaria
   int hash = fs_hash(percorso);
-  
+
   return hash;
 }
 

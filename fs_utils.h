@@ -20,6 +20,7 @@ typedef struct node_tag
 
   //Parametri comuni
   char* name;
+  char* percorso; //Utile per riordinare
   int rb_hash;
   char* content;
 } node_t;

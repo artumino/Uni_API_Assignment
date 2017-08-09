@@ -31,19 +31,20 @@ typedef struct node_tag
   int childs;
   int depth;
   char* name;
-  char* percorso; //Utile per riordinare
+  char* path; //Utile per riordinare
   char* content;
 } node_t;
 
 //Interfaccia per i comandi da console
-bool fs_create(node_t* root, char* percorso, bool is_dir);
-char* fs_read(node_t* root, char* percorso);
-int fs_write(node_t* root, char* percorso, char* contenuto);
-bool fs_delete(node_t* root, char* percorso, bool recursive);
+char** fs_parse_path(char* path);
+bool fs_create(node_t* root, char** path, bool is_dir);
+char* fs_read(node_t* root, char** path);
+int fs_write(node_t* root, char** path, char* contenuto);
+bool fs_delete(node_t* root, char** path, bool recursive);
 node_t* fs_find(node_t* root, char* name); //NULL come ultimo elemento
 
 //Metodi utility per BST-RB
-int fs_hash(char* percorso);
+int fs_hash(char* name);
 int fs_hash_length(int hash);
 void fs_bst_rotate(node_t** root, node_t* node, bool left);
 int fs_rb_insert(node_t** root, node_t* node);

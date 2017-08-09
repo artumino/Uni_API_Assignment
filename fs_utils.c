@@ -5,38 +5,65 @@
 #include <string.h>
 #include "fs_utils.h"
 
-bool fs_create(node_t* root, char* percorso, bool is_dir)
+char** fs_parse_path(char* path)
 {
+  char** path_arr = (char**)malloc(sizeof(char**));
+  char *token;
+  int i = 0;
 
+  token = strtok(path, "/");
+  while( token != NULL )
+  {
+    printf("%s\n", token);
+    path_arr[i] = token;
+    token = strtok(NULL, "/");
+    i++;
+    realloc(path_arr, (i+1) * sizeof(char**));
+  }
+
+  if(i == 0)
+  {
+    free(path_arr);
+    return NULL;
+  }
+
+  path_arr[i] = NULL;
+  return path_arr;
+}
+
+bool fs_create(node_t* root, char** path, bool is_dir)
+{
+  if(path == NULL)
+  {
+    //Esiste già il file/dir che volevo creare
+    //TODO: ERRORE
+  }
   return true;
 }
 
-int fs_write(node_t* root, char* percorso, char* contenuto)
+int fs_write(node_t* root, char** path, char* content)
 {
   node_t* child;
-  if(*percorso == '/')
-    percorso += sizeof(char);
 
-  if(*percorso == '\0')
+  if(path == NULL)
   {
-    //Trovato elemento
+    //L'elemento è stato trovato, si trova in root
+    root->content = content;
+    return strlen(content); //Effettuo la scrittura
   }
 
-  //Calcolo hash del file per la ricerca binaria
-  int hash = fs_hash(percorso);
-
-  return hash;
+  return -1;
 }
 
 //Non ritorno la lunghezza perchè posso facilmente ricavarla facendo ceil((double)(hash+1)/_MAX_CHAR_COMBINATIONS_);
-int fs_hash(char* percorso)
+int fs_hash(char* name)
 {
   int hash = 0;
   int len = 0;
   int sChar = 0;
-  while(*percorso != '\0' && *percorso != '/')
+  while(*name != '\0' && *name != '/')
   {
-    sChar = *percorso++;
+    sChar = *name++;
     if(sChar > 47 && sChar < 58) //0-9 -> 0-9
     {
       sChar -= 48;
@@ -50,7 +77,7 @@ int fs_hash(char* percorso)
       sChar -= 61;
     }
     else
-      return _FS_HASH_WRONG_CHARS_; //Caratteri inaspettati nel path
+      return _FS_HASH_WRONG_CHARS_; //Caratteri inaspettati nel name
     hash = sChar + (len++ * _MAX_CHAR_COMBINATIONS_);
   }
 

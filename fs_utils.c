@@ -108,3 +108,94 @@ void fs_bst_rotate(node_t** root, node_t* node, bool left)
 
   node->rb_parent = y;
 }
+
+int fs_rb_insert(node_t** root, node_t* node)
+{
+  node_t* y = NULL;
+  node_t* x = *root;
+
+  //Cerca la posizione dove inserire il nodo
+  while(x != NULL)
+  {
+    y = x;
+    if(node->rb_hash < x->rb_hash)
+      x = x->rb_left;
+    else
+      x = x->rb_right;
+  }
+
+  node->rb_parent = y;
+  if(y == NULL)
+    *root = node;
+  else if(node->rb_hash < y->rb_hash)
+    y->rb_left = node;
+  else if(node->rb_hash > y->rb_hash)
+    y->rb_right = node;
+  else
+    return _FS_ITEM_ALREADY_EXISTS_;
+
+  node->rb_left = NULL;
+  node->rb_right = NULL;
+  node->rb_color = RED;
+  fs_rb_insert_fixup(root, node);
+  return 0;
+}
+
+void fs_rb_insert_fixup(node_t** root, node_t* node)
+{
+  if(node == *root)
+    (*root)->rb_color = BLACK;
+  else
+  {
+    node_t* x = node->rb_parent;
+    if(x->rb_color == RED)
+    {
+      if(x == x->rb_parent->rb_left) //Se x è figlio sinistro
+      {
+        node_t* y = x->rb_parent->rb_right;
+        if(y->rb_color == RED)
+        {
+          x->rb_color = BLACK;                        //Caso 1
+          y->rb_color = BLACK;                        //Caso 1
+          x->rb_parent->rb_color = RED;               //Caso 1
+          fs_rb_insert_fixup(root, x->rb_parent);     //Caso 1
+        }
+        else
+        {
+          if(node == x->rb_right)
+          {
+            node = x;                                       //Caso 2
+            fs_bst_rotate(root, node, true); //Rotate Left  //Caso 2
+            x = node->rb_parent;                            //Caso 2
+          }
+          x->rb_color = BLACK;                                      //Caso 3
+          x->rb_parent->rb_color = RED;                             //Caso 3
+          fs_bst_rotate(root, x->rb_parent, false); //Rotate Right  //Caso 3
+        }
+      }
+      else
+      {
+        node_t* y = x->rb_parent->rb_left;
+        if(y->rb_color == RED)
+        {
+          x->rb_color = BLACK;                        //Caso 1
+          y->rb_color = BLACK;                        //Caso 1
+          x->rb_parent->rb_color = RED;               //Caso 1
+          fs_rb_insert_fixup(root, x->rb_parent);     //Caso 1
+        }
+        else
+        {
+          if(node == x->rb_left)
+          {
+            node = x;                                         //Caso 2
+            fs_bst_rotate(root, node, false); //Rotate Right  //Caso 2
+            x = node->rb_parent;                              //Caso 2
+          }
+          x->rb_color = BLACK;                                    //Caso 3
+          x->rb_parent->rb_color = RED;                           //Caso 3
+          fs_bst_rotate(root, x->rb_parent, true); //Rotate Left  //Caso 3
+        }
+      }
+    }
+  }
+}

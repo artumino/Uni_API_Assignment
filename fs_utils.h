@@ -3,10 +3,16 @@
 #ifndef _FS_UTILS_
 #define _FS_UTILS_
 
+#define _FS_MAX_DEPTH_ 255
+#define _FS_MAX_CHILDS_ 1024
 #define _MAX_CHAR_COMBINATIONS_ 62
 
+//Error Codes
+#define _FS_ITEM_ALREADY_EXISTS_ -1
 #define _FS_HASH_WRONG_CHARS_ -2
 #define _FS_HASH_EMPTY_ -1
+
+typedef enum rb_color { RED, BLACK } rb_color_t;
 
 typedef struct node_tag
 {
@@ -17,13 +23,15 @@ typedef struct node_tag
   struct node_tag* rb_parent;
   struct node_tag* rb_left;
   struct node_tag* rb_right;
-  char color; //1 Red, 0 Black
+  rb_color_t rb_color; //1 Red, 0 Black
+  int rb_hash;
 
   //Parametri comuni
   bool isDir;
+  int childs;
+  int depth;
   char* name;
   char* percorso; //Utile per riordinare
-  int rb_hash;
   char* content;
 } node_t;
 
@@ -38,4 +46,6 @@ node_t* fs_find(node_t* root, char* name); //NULL come ultimo elemento
 int fs_hash(char* percorso);
 int fs_hash_length(int hash);
 void fs_bst_rotate(node_t** root, node_t* node, bool left);
+int fs_rb_insert(node_t** root, node_t* node);
+void fs_rb_insert_fixup(node_t** root, node_t* node);
 #endif

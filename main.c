@@ -53,6 +53,7 @@ int readCommand(char** comando)
 
 void parseCommand(char** command, int count, node_t* root)
 {
+  char** path;
   if(count < 1)
     return;
 
@@ -65,7 +66,10 @@ void parseCommand(char** command, int count, node_t* root)
       return;
     }
 
-    printf("%s\n", fs_create(root, fs_parse_path(command[1]), false) ? "ok" : "no");
+    path = fs_parse_path(command[1]);
+    if(path != NULL)
+      printf("%s\n", fs_create(root, path, false) ? "ok" : "no");
+    else printf("no\n");
   }
 
   //create_dir <percorso_dir>
@@ -77,7 +81,10 @@ void parseCommand(char** command, int count, node_t* root)
       return;
     }
 
-    printf("%s\n", fs_create(root, fs_parse_path(command[1]), true) ? "ok" : "no");
+    path = fs_parse_path(command[1]);
+    if(path != NULL)
+      printf("%s\n", fs_create(root, path, true) ? "ok" : "no");
+    else printf("no\n");
   }
 }
 

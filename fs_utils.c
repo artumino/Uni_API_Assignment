@@ -7,14 +7,20 @@
 
 char** fs_parse_path(char* path)
 {
-  char** path_arr = (char**)malloc(sizeof(char**));
+  //Gestione errori, impongo che ogni percorso parta dalla root
+  int pathLen = strlen(path);
+  if(pathLen == 0 || path[0] != '/')
+    return NULL;
+  //Ignoro il primo carattere
+  memmove(path, path+1, pathLen);
+
+  char** path_arr = (char**)malloc(sizeof(char*));
   char *token;
   int i = 0;
 
   token = strtok(path, "/");
   while( token != NULL )
   {
-    printf("%s\n", token);
     path_arr[i] = token;
     token = strtok(NULL, "/");
     i++;
@@ -31,14 +37,60 @@ char** fs_parse_path(char* path)
   return path_arr;
 }
 
-bool fs_create(node_t* root, char** path, bool is_dir)
+bool fs_create(node_t* root, char** path, bool isDir)
 {
-  if(path == NULL)
+  if(root->depth + 1 > _FS_MAX_DEPTH_)
+    return false; //_FS_MAX_DEPTH_REACHED_
+  if(*path == NULL)
   {
     //Esiste già il file/dir che volevo creare
     //TODO: ERRORE
   }
-  return true;
+
+  int hash = fs_hash(*path);
+  if(hash < 0)
+    return false;
+
+  if(*(path + 1) == NULL)
+  {
+    //Sono all'elemento finale, devo aggiungere qua il file
+    if(root->childs+1 > _FS_MAX_CHILDS_)
+      return false; //_FS_MAX_CHILDS_REACHED_
+
+    //Creo il nodo e sistemo i suoi parametri (sistemerò il parente dopo la tentata creazione nel BST della directory)
+    node_t* node = (node_t*)malloc(sizeof(node_t));
+    node->fs_parent = root;
+    node->isDir = isDir;
+    node->childs = 0;
+    node->depth = root->depth + 1;
+    node->rb_hash = hash;
+
+    //Alloco lo spazio per le stringhe
+    node->name = (char*)malloc(strlen(*path) * sizeof(char));
+    node->path = (char*)malloc((strlen(*path) + strlen(root->path) + 1) * sizeof(char));
+    node->name = strcpy(node->name, *path);
+    node->path = strcpy(node->path, node->path);
+    strcat(node->path, "/");
+    strcat(node->path, *path);
+
+    //TODO: Insert BST-RB
+    int result = fs_rb_insert(&root->rb_root, node);
+    if(result < 0) //Errore di inserimento
+    {
+      free(node);
+      return false;
+    }
+
+    root->childs++;
+
+    return true;
+  }
+
+  node_t* next = fs_bst_find_node(root->rb_root, hash);
+  if(next == NULL)
+    return false;
+
+  return fs_create(next, path + 1, isDir);
 }
 
 int fs_write(node_t* root, char** path, char* content)
@@ -134,6 +186,18 @@ void fs_bst_rotate(node_t** root, node_t* node, bool left)
     y->rb_right = node;
 
   node->rb_parent = y;
+}
+
+//Metodo per effettuare la ricerca nei BST
+node_t* fs_bst_find_node(node_t* root, int hash)
+{
+  if(root == NULL)
+    return NULL;
+
+  if(root->rb_hash == hash)
+    return root;
+  else
+    return root->rb_hash > hash ? fs_bst_find_node(root->rb_left, hash) : fs_bst_find_node(root->rb_right, hash);
 }
 
 int fs_rb_insert(node_t** root, node_t* node)

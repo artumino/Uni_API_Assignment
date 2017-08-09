@@ -7,6 +7,7 @@
 
 #define MAX_PARAMS 3
 
+static node_t root;
 int readCommand(char** comando)
 {
   char* str = (char*)malloc(sizeof(char));
@@ -50,8 +51,47 @@ int readCommand(char** comando)
   return clen;
 }
 
+void parseCommand(char** command, int count, node_t* root)
+{
+  if(count < 1)
+    return;
+
+  //create <percorso_file>
+  if(strcmp(command[0], "create"))
+  {
+    if(count < 2)
+    {
+      printf("no\n");
+      return;
+    }
+
+    printf("%s\n", fs_create(root, fs_parse_path(command[1]), false) ? "ok" : "no");
+  }
+
+  //create_dir <percorso_dir>
+  if(strcmp(command[0], "create_dir"))
+  {
+    if(count < 2)
+    {
+      printf("no\n");
+      return;
+    }
+
+    printf("%s\n", fs_create(root, fs_parse_path(command[1]), true) ? "ok" : "no");
+  }
+}
+
 int main(void)
 {
+  root.fs_parent = NULL;
+  root.rb_root = NULL;
+  root.name = NULL;
+  root.path = NULL;
+  root.content = NULL;
+  root.childs = 0;
+  root.depth = 0;
+  root.isDir = true;
+
   char** comando = NULL;
   int count = 0;
   do
@@ -63,6 +103,7 @@ int main(void)
 
     //Leggo il prossimo comando
     count = readCommand(comando);
+    parseCommand(comando, count, &root);
   } while(count > 0 && strcmp(comando[0], "exit"));
   return 1;
 }

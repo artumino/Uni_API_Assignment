@@ -23,6 +23,12 @@ int main(void)
   char contenuto[] = "ehehehe";
   char** arr_percorso = fs_parse_path(percorso);
 
+  if(arr_percorso == NULL)
+  {
+    printf("Percorso malformato, manca l'indicatore della root...\n");
+    return 0;
+  }
+
   printf("\tHash\t|\tLength\t|\tPercorso\n");
   i = 0;
   while(arr_percorso[i] != NULL)

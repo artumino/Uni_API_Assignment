@@ -1,8 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <math.h>
 #include <string.h>
 #include "fs_utils.h"
+
+bool fs_create(node_t* root, char* percorso, bool is_dir)
+{
+
+  return true;
+}
 
 int fs_write(node_t* root, char* percorso, char* contenuto)
 {
@@ -58,4 +65,46 @@ int fs_hash(char* percorso)
 int fs_hash_length(int hash)
 {
   return ceil((double)(hash+1)/_MAX_CHAR_COMBINATIONS_);
+}
+
+//Metodi per effettuare le rotazioni negli alberi binari
+void fs_bst_rotate(node_t** root, node_t* node, bool left)
+{
+  node_t* y = left ? node->rb_right : node->rb_left;
+
+  //Effettua la rotazione
+  if(left)
+  {
+    //Left Rotate
+    node->rb_right = y->rb_left;
+
+    if(y->rb_left != NULL)
+      y->rb_left->rb_parent = node;
+    y->rb_parent = node->rb_parent;
+  }
+  else
+  {
+    //Right Rotate
+    node->rb_left = y->rb_right;
+
+    if(y->rb_right != NULL)
+      y->rb_right->rb_parent = node;
+    y->rb_parent = node->rb_parent;
+  }
+
+  //Sistema Root e Nodi sovrastanti
+  if(node->rb_parent == NULL)
+    *root = y;
+  else if(node == node->rb_parent->rb_left)
+    node->rb_parent->rb_left = y;
+  else
+    node->rb_parent->rb_right = y;
+
+  //Imposta Node come figlio opportuno del pivot
+  if(left)
+    y->rb_left = node;
+  else
+    y->rb_right = node;
+
+  node->rb_parent = y;
 }

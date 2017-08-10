@@ -11,6 +11,7 @@
 #define _FS_ITEM_ALREADY_EXISTS_ -1
 #define _FS_MAX_DEPTH_REACHED_ -1
 #define _FS_MAX_CHILDS_REACHED_ -2
+#define _FS_FILE_ALREADY_EXISTS_ -3
 #define _FS_HASH_WRONG_CHARS_ -2
 #define _FS_HASH_EMPTY_ -1
 

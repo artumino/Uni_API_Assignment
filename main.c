@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include "debug.h"
 #include "fs_utils.h"
 
 #define MAX_PARAMS 3
@@ -58,7 +59,7 @@ void parseCommand(char** command, int count, node_t* root)
     return;
 
   //create <percorso_file>
-  if(strcmp(command[0], "create"))
+  if(!strcmp(command[0], "create"))
   {
     if(count < 2)
     {
@@ -66,20 +67,26 @@ void parseCommand(char** command, int count, node_t* root)
       return;
     }
 
+    debug_print("[DEBUG] Creazione file iniziata...\n");
+
+
     path = fs_parse_path(command[1]);
+
     if(path != NULL)
       printf("%s\n", fs_create(root, path, false) ? "ok" : "no");
     else printf("no\n");
   }
 
   //create_dir <percorso_dir>
-  if(strcmp(command[0], "create_dir"))
+  if(!strcmp(command[0], "create_dir"))
   {
     if(count < 2)
     {
       printf("no\n");
       return;
     }
+
+    debug_print("[DEBUG] Creazione directory iniziata...\n");
 
     path = fs_parse_path(command[1]);
     if(path != NULL)

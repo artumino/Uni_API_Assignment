@@ -69,19 +69,27 @@ bool fs_create(node_t* root, char** path, bool isDir)
     node->fs_parent = root;
     node->isDir = isDir;
     node->childs = 0;
+    node->rb_color = BLACK;
     node->depth = root->depth + 1;
     node->rb_hash = hash;
 
-    debug_print("[DEBUG] Parametri di base BST impostati, scrivo i contenuti delle stringhe di dimansione: %d - %d...\n", (int)(strlen(*path) * sizeof(char)), (int)((strlen(*path) + (root->path != NULL ? strlen(root->path) : 0) + 1) * sizeof(char)));
+    int lenPath = strlen(*path);
+    debug_print("[DEBUG] Parametri di base BST impostati, scrivo i contenuti delle stringhe di dimansione: %d - %d...\n", (int)(lenPath * sizeof(char)), (int)((lenPath + (root->path != NULL ? strlen(root->path) : 0) + 1) * sizeof(char)));
 
     //Alloco lo spazio per le stringhe
-    node->name = (char*)malloc(strlen(*path) * sizeof(char));
-    node->path = (char*)malloc((strlen(*path) + (root->path != NULL ? strlen(root->path) : 0) + 1) * sizeof(char));
+    node->name = (char*)malloc(lenPath * sizeof(char));
+    node->path = (char*)malloc((lenPath + (root->path != NULL ? strlen(root->path) : 0) + 1) * sizeof(char));
     node->name = strcpy(node->name, *path);
+    debug_print("[DEBUG] Nome nodo impostato a %s\n", node->name);
     if(root->path != NULL)
+    {
       node->path = strcpy(node->path, root->path);
-    strcat(node->path, "/");
+      strcat(node->path, "/");
+    }
+    else
+      strcpy(node->path, "/");
     strcat(node->path, *path);
+    debug_print("[DEBUG] Path nodo impostato a %s\n", node->path);
 
     debug_print("[DEBUG] Parametri nodo scritti, inserimento nell'albero RB della directory...\n");
 
@@ -167,6 +175,7 @@ void fs_bst_rotate(node_t** root, node_t* node, bool left)
   //Effettua la rotazione
   if(left)
   {
+    debug_print("[DEBUG][ROTATE] %s left\n", node->name);
     //Left Rotate
     node->rb_right = y->rb_left;
 
@@ -176,6 +185,7 @@ void fs_bst_rotate(node_t** root, node_t* node, bool left)
   }
   else
   {
+    debug_print("[DEBUG][ROTATE] %s right\n", node->name);
     //Right Rotate
     node->rb_left = y->rb_right;
 
@@ -226,8 +236,10 @@ int fs_rb_insert(node_t** root, node_t* node)
     y = x;
     if(node->rb_hash < x->rb_hash)
       x = x->rb_left;
-    else
+    else if(node->rb_hash > x->rb_hash)
       x = x->rb_right;
+    else
+      return _FS_ITEM_ALREADY_EXISTS_;
   }
 
 
@@ -252,19 +264,22 @@ int fs_rb_insert(node_t** root, node_t* node)
 
 void fs_rb_insert_fixup(node_t** root, node_t* node)
 {
-  debug_print("[DEBUG] Inizio fix-up per %s...\n", node->name);
+  debug_print("[DEBUG][FIX-UP] Inizio fix-up per %s...\n", node->name);
   if(node == *root)
     (*root)->rb_color = BLACK;
   else
   {
+    debug_print("[DEBUG][FIX-UP] Nodo non root, con root %s...\n", (*root)->name);
     node_t* x = node->rb_parent;
     if(x->rb_color == RED)
     {
       if(x == x->rb_parent->rb_left) //Se x è figlio sinistro
       {
+        debug_print("[DEBUG][FIX-UP] x è sinistro\n");
         node_t* y = x->rb_parent->rb_right;
         if(y->rb_color == RED)
         {
+          debug_print("[DEBUG][FIX-UP] caso 1\n");
           x->rb_color = BLACK;                        //Caso 1
           y->rb_color = BLACK;                        //Caso 1
           x->rb_parent->rb_color = RED;               //Caso 1
@@ -274,10 +289,12 @@ void fs_rb_insert_fixup(node_t** root, node_t* node)
         {
           if(node == x->rb_right)
           {
+            debug_print("[DEBUG][FIX-UP] caso 2\n");
             node = x;                                       //Caso 2
             fs_bst_rotate(root, node, true); //Rotate Left  //Caso 2
             x = node->rb_parent;                            //Caso 2
           }
+          debug_print("[DEBUG][FIX-UP] caso 3\n");
           x->rb_color = BLACK;                                      //Caso 3
           x->rb_parent->rb_color = RED;                             //Caso 3
           fs_bst_rotate(root, x->rb_parent, false); //Rotate Right  //Caso 3
@@ -285,9 +302,11 @@ void fs_rb_insert_fixup(node_t** root, node_t* node)
       }
       else
       {
+        debug_print("[DEBUG][FIX-UP] x è destro\n");
         node_t* y = x->rb_parent->rb_left;
         if(y->rb_color == RED)
         {
+          debug_print("[DEBUG][FIX-UP] caso 1\n");
           x->rb_color = BLACK;                        //Caso 1
           y->rb_color = BLACK;                        //Caso 1
           x->rb_parent->rb_color = RED;               //Caso 1
@@ -297,10 +316,12 @@ void fs_rb_insert_fixup(node_t** root, node_t* node)
         {
           if(node == x->rb_left)
           {
+            debug_print("[DEBUG][FIX-UP] caso 2\n");
             node = x;                                         //Caso 2
             fs_bst_rotate(root, node, false); //Rotate Right  //Caso 2
             x = node->rb_parent;                              //Caso 2
           }
+          debug_print("[DEBUG][FIX-UP] caso 3\n");
           x->rb_color = BLACK;                                    //Caso 3
           x->rb_parent->rb_color = RED;                           //Caso 3
           fs_bst_rotate(root, x->rb_parent, true); //Rotate Left  //Caso 3

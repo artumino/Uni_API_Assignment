@@ -61,7 +61,7 @@ void parseCommand(char** command, int count, node_t* root)
   //create <percorso_file>
   if(!strcmp(command[0], "create"))
   {
-    if(count < 2)
+    if(count != 2)
     {
       printf("no\n");
       return;
@@ -80,7 +80,7 @@ void parseCommand(char** command, int count, node_t* root)
   //create_dir <percorso_dir>
   if(!strcmp(command[0], "create_dir"))
   {
-    if(count < 2)
+    if(count != 2)
     {
       printf("no\n");
       return;
@@ -115,6 +115,7 @@ int main(void)
       free(comando);
     comando =  (char**)malloc(MAX_PARAMS * sizeof(char*));
 
+    debug_print("Scelta--> ");
     //Leggo il prossimo comando
     count = readCommand(comando);
     parseCommand(comando, count, &root);

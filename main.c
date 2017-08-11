@@ -18,25 +18,15 @@ int readCommand(char** comando)
   while((c = getchar()) != '\n' && c != EOF)
   {
     //Se non ho uno spazio tra caratteri leggo la stringa
-    if(c != ' ')
+    if(c != ' ' || clen >= MAX_PARAMS)
     {
       str[len++] = c;
       str = (char*)realloc(str, (len + 1) * sizeof(char));
     }
     else
     {
-      //Se è uno spazio, allora sono nell'intermezzo tra più stringhe
-      //cerco di inserire i dati nell'array dei parametri (se c'è spazio)
-      if(clen < MAX_PARAMS)
-      {
-        str[len] = '\0';
-        comando[clen++] = str;
-      }
-      else
-      {
-        //Non c'è più spazio nei parametri, ignoro la stringa e libero la sua memoria
-        free(str);
-      }
+      str[len] = '\0';
+      comando[clen++] = str;
       str = (char*)malloc(sizeof(char)); //Reinstazio una nuova stringa, pronta per il prossimo parametro
       len = 0;
     }
@@ -91,6 +81,23 @@ void parseCommand(char** command, int count, node_t* root)
     path = fs_parse_path(command[1]);
     if(path != NULL)
       printf("%s\n", fs_create(root, path, true) ? "ok" : "no");
+    else printf("no\n");
+  }
+
+  //write <percorso_file> <contenuto>
+  if(!strcmp(command[0], "write"))
+  {
+    if(count != 3)
+    {
+      printf("no\n");
+      return;
+    }
+
+    debug_print("[DEBUG] Scrittura file iniziata...\n");
+
+    path = fs_parse_path(command[1]);
+    if(path != NULL)
+      printf("%s\n", fs_write(root, path, command[2]) ? "ok" : "no");
     else printf("no\n");
   }
 }

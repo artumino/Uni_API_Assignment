@@ -3,7 +3,7 @@ PROG = main.c fs_utils.c local_random.c
 default: all
 
 all:
-	gcc -DEVAL -static -g -fno-omit-frame-pointer -gdwarf-2 -DDEBUG -std=c99 -O2 $(PROG)  -lm -o main
+	gcc -DEVAL -DDEBUG -static -g -fno-omit-frame-pointer -gdwarf-2 -DDEBUG -std=c99 -O2 $(PROG)  -lm -o main
 
 run:
 	main $(ARGS)

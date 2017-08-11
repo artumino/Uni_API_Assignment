@@ -151,15 +151,7 @@ bool fs_create(node_t* root, char** path, bool isDir)
     return true;
   }
 
-  debug_print("[DEBUG] Nodo intermedio controllo che abbia figli\n");
-  //Sono in un nodo intermedio, devo ricercare
-  if(root->childs == 0) // Questo livello non ha più sottofigli, il percorso deve essere errato
-    return false;
-
-  debug_print("[DEBUG] Trovo il nodo con il nome che mi serve\n");
-  node_t* next = root->hash_table[hash]; // = fs_bst_find_node(root->rb_root, key);
-  while(next != NULL && next->key != key) //Trovo il nodo che mi serve
-    next = next->hash_next;
+  node_t* next = fs_hash_next_node(root, key);
 
   if(next == NULL)
     return false;
@@ -168,18 +160,33 @@ bool fs_create(node_t* root, char** path, bool isDir)
   return fs_create(next, path + 1, isDir);
 }
 
+//Metodo per scrivere nei file
 int fs_write(node_t* root, char** path, char* content)
 {
-  node_t* child;
-
-  if(path == NULL)
+  if(*path == NULL && !root->isDir)
   {
+    debug_print("[DEBUG] Ultimo nodo, controllo se devo liberare il vecchio contenuto\n");
     //L'elemento è stato trovato, si trova in root
-    root->content = content;
-    return strlen(content); //Effettuo la scrittura
-  }
+    if(root->content != NULL)
+      free(root->content);
 
-  return -1;
+    int contentLen = strlen(content);
+    debug_print("[DEBUG] Scrivo %d byte di nuovo contenuto\n", (int)((contentLen + 1) * sizeof(char)));
+    root->content = (char*)malloc((contentLen + 1) * sizeof(char));
+    strcpy(root->content, content);
+    return contentLen; //Effettuo la scrittura
+  }
+  else if(path == NULL)
+    return false;
+
+  //Mi trovo in un nodo intermedio, cerco il prossimo nodo in lista
+  node_t* next = fs_hash_next_node(root, fs_key(*path));
+
+  if(next == NULL)
+    return false;
+
+  debug_print("[DEBUG] Procedo al prossimo nodo\n");
+  return fs_write(next, path + 1, content);
 }
 
 //Non ritorno la lunghezza perchè posso facilmente ricavarla facendo ceil((double)(key+1)/_MAX_CHAR_COMBINATIONS_);
@@ -225,6 +232,25 @@ int fs_key_length(int key)
 int fs_hash(int key, int buckets)
 {
   return local_rand(key, buckets);
+}
+
+//Metodo per ricercare un elemento per chiave in una tabella hash
+node_t* fs_hash_next_node(node_t* root, int key)
+{
+  debug_print("[DEBUG][FIND-NEXT] Controllo che ci siano figli\n");
+  //Sono in un nodo intermedio, devo ricercare
+  if(root->childs == 0) // Questo livello non ha più sottofigli, il percorso deve essere errato
+    return NULL;
+
+  if(key < 0)
+    return NULL;
+
+  debug_print("[DEBUG] Trovo il nodo con il nome che mi serve\n");
+  node_t* next = root->hash_table[fs_hash(key, _FS_HASH_BUCKETS_)]; // = fs_bst_find_node(root->rb_root, key);
+  while(next != NULL && next->key != key) //Trovo il nodo che mi serve
+    next = next->hash_next;
+
+  return next;
 }
 
 //Metodi per effettuare le rotazioni negli alberi binari

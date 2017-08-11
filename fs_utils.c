@@ -17,6 +17,8 @@ char** fs_parse_path(char* path)
   memmove(path, path+1, pathLen);
 
   char** path_arr = (char**)malloc(sizeof(char*));
+  path_arr[0] = NULL; //Imposto il primo elemento a null
+
   char *token;
   int i = 0;
 
@@ -26,7 +28,7 @@ char** fs_parse_path(char* path)
     path_arr[i] = token;
     token = strtok(NULL, "/");
     i++;
-    realloc(path_arr, (i+1) * sizeof(char**));
+    realloc(path_arr, (i+1) * sizeof(char*));
   }
 
   if(i == 0)
@@ -37,14 +39,17 @@ char** fs_parse_path(char* path)
 
   debug_print("[DEBUG] Parsing della path effettuato, profondita rilevata: %d\n", i);
 
-  path_arr[i] = NULL;
+  path_arr[i] = NULL; //Imposto l'ultimo elemento a null
   return path_arr;
 }
 
 bool fs_create(node_t* root, char** path, bool isDir)
 {
   if(root->depth + 1 > _FS_MAX_DEPTH_)
+  {
+    debug_print("[DEBUG] Max depth reached!\n");
     return false; //_FS_MAX_DEPTH_REACHED_
+  }
   if(*path == NULL)
   {
     //Esiste già il file/dir che volevo creare
@@ -59,14 +64,14 @@ bool fs_create(node_t* root, char** path, bool isDir)
   debug_print("[DEBUG] Calcolato key per %s = %d\n", *path, key);
 
   //Sono all'ultimo nodo, devo inserire l'elemento se non già esistente
-  if(*(path + 1) == NULL)
+  if(*(path + 1) == NULL )//|| *(path + 1)[0] == 0) //Investigare sul secondo check
   {
     //Non sono in una directory
     if(!root->isDir)
       return false;
 
     //Sono all'elemento finale, devo aggiungere qua il file
-    if(root->childs+1 > _FS_MAX_CHILDS_)
+    if(root->childs +1  > _FS_MAX_CHILDS_)
       return false; //_FS_MAX_CHILDS_REACHED_
 
 
@@ -115,15 +120,16 @@ bool fs_create(node_t* root, char** path, bool isDir)
     }
     */
     debug_print("[DEBUG] Inserisco il nodo nella hash table del livello...\n");
-    if(root->hash_table == NULL)
+    if(root->childs == 0)
     {
       //Creo la tabella
-      debug_print("[DEBUG] Hash table del livello non ancora inizializzata");
+      debug_print("[DEBUG] Hash table del livello non ancora inizializzata\n");
       root->hash_table = (node_t**)malloc(_FS_HASH_BUCKETS_ * sizeof(node_t*));
       memset(root->hash_table, 0, _FS_HASH_BUCKETS_ * sizeof(node_t*));
     }
 
     //Cerco se esiste un elemento con lo stesso nome
+    debug_print("[DEBUG] Cerco se l'elemento è un doppione\n");
     node_t* hash_spot = root->hash_table[hash];
     while(hash_spot != NULL && hash_spot->key != key) //Scorro le collisioni
       hash_spot = hash_spot->hash_next;
@@ -131,6 +137,7 @@ bool fs_create(node_t* root, char** path, bool isDir)
     if(hash_spot != NULL)
       return false; //Elemento già esistente
 
+    debug_print("[DEBUG] Inserisco l'elemto nell'hashtable ed aggiorno il padre\n");
     //Aggiorno l'hash table con il nuovo nodo
     node->hash_next = root->hash_table[hash];
     root->hash_table[hash] = node;
@@ -144,17 +151,20 @@ bool fs_create(node_t* root, char** path, bool isDir)
     return true;
   }
 
+  debug_print("[DEBUG] Nodo intermedio controllo che abbia figli\n");
   //Sono in un nodo intermedio, devo ricercare
-  if(root->hash_table == NULL) // Questo livello non ha più sottofigli, il percorso deve essere errato
+  if(root->childs == 0) // Questo livello non ha più sottofigli, il percorso deve essere errato
     return false;
 
+  debug_print("[DEBUG] Trovo il nodo con il nome che mi serve\n");
   node_t* next = root->hash_table[hash]; // = fs_bst_find_node(root->rb_root, key);
-  while(next != NULL && root->key != key) //Trovo il nodo che mi serve
+  while(next != NULL && next->key != key) //Trovo il nodo che mi serve
     next = next->hash_next;
 
   if(next == NULL)
     return false;
 
+  debug_print("[DEBUG] Procedo al prossimo nodo\n");
   return fs_create(next, path + 1, isDir);
 }
 

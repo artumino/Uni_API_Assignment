@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include "debug.h"
 #include "fs_utils.h"
 
 //File per verificare che l'key rimanga nei limiti di memoria
@@ -11,9 +12,12 @@
 #define CHAR_COMBINATIONS 62
 #define MAX_CHARS 255
 
+node_t root;
+
 int main(void)
 {
   int total = 0;
+  char name [2]= "a";
   int i = 0;
   int j;
   int extraction;
@@ -25,6 +29,26 @@ int main(void)
   printf("%d\n", total);
   char percorso[] = "/testasd/effucco/effanculen";
   char contenuto[] = "ehehehe";
+
+  root.fs_parent = NULL;
+  root.rb_root = NULL;
+  root.name = NULL;
+  root.path = NULL;
+  root.content = NULL;
+  root.childs = 0;
+  root.depth = 0;
+  root.isDir = true;
+
+  char* str[256];
+  memset(str, 0, 257*sizeof(char*));
+
+  for(i = 0; i < 256; i++)
+  {
+    str[i] = (char*)malloc(2 * sizeof(char));
+    memcpy(str[i], name, 2 * sizeof(char));
+    debug_print("=================== %s ========================\n", str[i]);
+    printf("%s\n", fs_create(&root, str, true) ? "ok" : "no");
+  }
   //char** arr_percorso = fs_parse_path(percorso);
 
 
@@ -45,7 +69,7 @@ int main(void)
     i++;
   }*/
 
-  int buckets = 1259;
+  /*int buckets = 1259;
   int hash_table[buckets];
   int collisions = 0;
   char extracted = '\0';
@@ -75,7 +99,8 @@ int main(void)
       collisions++;
     }
   }
-  printf("In totale ci sono state %d collisioni su %d buckets\n", collisions, buckets);
+  printf("In totale ci sono state %d collisioni su %d buckets\n", collisions, buckets);*/
+
 
   return 0;
 }

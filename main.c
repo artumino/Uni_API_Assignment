@@ -98,11 +98,19 @@ void parseCommand(char** command, int count, node_t* root)
     path = fs_parse_path(command[1]);
     if(path != NULL)
     {
-      int result = fs_write(root, path, command[2]);
-      if(result > 0)
-        printf("ok %d\n", result);
-      else
+      int fullLen = strlen(command[2]);
+      if(fullLen < 2 || command[2][0] != '"' || command[2][fullLen - 1] != '"')
         printf("no\n");
+      else
+      {
+        command[2] += 1;
+        command[2][fullLen - 2] = 0;
+        int result = fs_write(root, path, command[2]);
+        if(result > 0)
+          printf("ok %d\n", result);
+        else
+          printf("no\n");
+      }
     }
     else printf("no\n");
   }
@@ -123,7 +131,7 @@ void parseCommand(char** command, int count, node_t* root)
     {
       char* result = fs_read(root, path);
       if(result != NULL)
-        printf("ok %s\n", result);
+        printf("contenuto %s\n", result);
       else
         printf("no\n");
     }

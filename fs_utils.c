@@ -13,8 +13,9 @@ char** fs_parse_path(char* path)
   int pathLen = strlen(path);
   if(pathLen == 0 || path[0] != '/')
     return NULL;
-  //Ignoro il primo carattere
-  memmove(path, path+1, pathLen);
+  //Ignoro il primo carattere (Avevo un free inutile)
+  //memmove(path, path+1, pathLen);
+  //path += 1;
 
   char** path_arr = (char**)malloc(sizeof(char*));
   path_arr[0] = NULL; //Imposto il primo elemento a null

@@ -4,6 +4,7 @@
 #include <math.h>
 #include <string.h>
 #include "debug.h"
+#include "local_random.h"
 #include "fs_utils.h"
 
 char** fs_parse_path(char* path)
@@ -73,12 +74,16 @@ bool fs_create(node_t* root, char** path, bool isDir)
     node->depth = root->depth + 1;
     node->key = key;
 
-    int lenPath = strlen(*path);
-    debug_print("[DEBUG] Parametri di base BST impostati, scrivo i contenuti delle stringhe di dimansione: %d - %d...\n", (int)(lenPath * sizeof(char)), (int)((lenPath + (root->path != NULL ? strlen(root->path) : 0) + 1) * sizeof(char)));
+    int lenName = strlen(*path) + 1;
+    int lenPath = (lenName + (root->path != NULL ? strlen(root->path) : 0) + 1);
+    debug_print("[DEBUG] Parametri di base BST impostati, scrivo i contenuti delle stringhe di dimansione: %d - %d...\n", (int)(lenName * sizeof(char)), (int)(lenPath * sizeof(char)));
 
     //Alloco lo spazio per le stringhe
-    node->name = (char*)malloc(lenPath * sizeof(char));
-    node->path = (char*)malloc((lenPath + (root->path != NULL ? strlen(root->path) : 0) + 1) * sizeof(char));
+    node->name = (char*)malloc(lenName * sizeof(char));
+    node->path = (char*)malloc(lenPath * sizeof(char));
+    memset(node->name, 0, lenName + 1);
+    memset(node->path, 0, lenPath + 1);
+
     node->name = strcpy(node->name, *path);
     debug_print("[DEBUG] Nome nodo impostato a %s\n", node->name);
     if(root->path != NULL)
@@ -141,7 +146,7 @@ int fs_key(char* name)
     {
       sChar -= 48;
     }
-    else if(sChar > 64 && sChar < 91) // A-Z -> 10-34
+    else if(sChar > 64 && sChar < 91) // A-Z -> 10-35
     {
       sChar -= 55;
     }
@@ -167,11 +172,10 @@ int fs_key_length(int key)
   return ceil((double)(key+1)/_MAX_CHAR_COMBINATIONS_);
 }
 
-//Metodo per calcolare un'hash con _FS_MAX_CHILDS_ buckets
-int fs_hash(int key)
+//Metodo per calcolare un'hash
+int fs_hash(int key, int buckets)
 {
-  srand(key);
-  return rand() % _FS_MAX_CHILDS_;
+  return local_rand(key, buckets);
 }
 
 //Metodi per effettuare le rotazioni negli alberi binari

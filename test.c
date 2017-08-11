@@ -25,10 +25,10 @@ int main(void)
   printf("%d\n", total);
   char percorso[] = "/testasd/effucco/effanculen";
   char contenuto[] = "ehehehe";
-  char** arr_percorso = fs_parse_path(percorso);
+  //char** arr_percorso = fs_parse_path(percorso);
 
 
-  if(arr_percorso == NULL)
+  /*if(arr_percorso == NULL)
   {
     printf("Percorso malformato, manca l'indicatore della root...\n");
     return 0;
@@ -39,34 +39,43 @@ int main(void)
   while(arr_percorso[i] != NULL)
   {
     key = fs_key(arr_percorso[i]);
-    printf("\t%d\t|\t%d\t|\t%d\t|\t", key, fs_hash(key), fs_key_length(key));
+    printf("\t%d\t|\t%d\t|\t%d\t|\t", key, fs_hash(key, _FS_MAX_CHILDS_), fs_key_length(key));
     for(j = 0; j <= i; j++)
       printf("%s%s", arr_percorso[j], i == j ? "\n" : "/");
     i++;
-  }
+  }*/
 
-  int hash_table[1024];
+  int buckets = 1259;
+  int hash_table[buckets];
+  int collisions = 0;
+  char extracted = '\0';
   char* str;
   int len = 0;
   srand(time(NULL));
+  memset(hash_table, 0, sizeof hash_table);
   for(i = 0; i < 1024; i++)
   {
     len = (rand() % 255) + 1;
-    str = (char*)malloc(sizeof(char)*len);
+    str = (char*)malloc(sizeof(char)*(len + 1));
+    memset( str, 0, len+1 );
     for(j = 0; j < len; j++)
     {
-      extraction = (int)(rand() % 62);
-      str[j] = (char)(extraction < 10 ? extraction : extraction >= 10 && extraction < 35 ? extraction + 55 : extraction + 61);
+      extraction = (unsigned int)(rand())% 62;
+      extracted = (char)(extraction < 10 ? extraction + 48 : (extraction >= 10 && extraction < 36) ? extraction + 55 : extraction + 61);
+      str[j] = extracted;
     }
 
     int key = fs_key(str);
-    int hash = fs_hash(key);
-    if(hash_table[hash] > 0 && hash_table[hash] != key)
-      printf("Collision for key %d and key %d\n", hash_table[hash], key);
-    hash_table[hash] = key;
-    sleep(0.01);
+    free(str);
+    int hash = fs_hash(key, buckets);
+    if(hash_table[hash] > 0)
+    {
+      printf("%d collisions for hash %d\n", hash_table[hash], hash);
+      collisions++;
+    }
+    hash_table[hash]++;
   }
-
+  printf("In totale ci sono state %d collisioni su %d buckets\n", collisions, buckets);
 
   return 0;
 }

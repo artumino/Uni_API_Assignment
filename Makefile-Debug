@@ -1,4 +1,4 @@
-PROG = main.c fs_utils.c
+PROG = main.c fs_utils.c local_random.c
 
 default: all
 

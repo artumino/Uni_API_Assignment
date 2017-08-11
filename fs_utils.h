@@ -56,7 +56,7 @@ node_t* fs_find(node_t* root, char* name); //NULL come ultimo elemento
 //Metodi utility
 int fs_key(char* name);
 int fs_key_length(int key);
-int fs_hash(int key);
+int fs_hash(int key, int buckets);
 
 //Metodi BST
 void fs_bst_rotate(node_t** root, node_t* node, bool left);

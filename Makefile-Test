@@ -1,9 +1,9 @@
-TEST = test.c fs_utils.c
+TEST = test.c fs_utils.c local_random.c
 
 default: all
 
 all:
-	gcc -DEVAL -static -std=c99 -O2 $(TEST) -lm -o test
+	gcc -DEVAL -DDEBUG -static -std=c99 -O2 $(TEST) -lm -o test
 
 run:
 	test $(ARGS)

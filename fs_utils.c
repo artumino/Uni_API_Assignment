@@ -54,29 +54,36 @@ bool fs_create(node_t* root, char** path, bool isDir)
   int key = fs_key(*path);
   if(key < 0)
     return false;
+  int hash = fs_hash(key, _FS_HASH_BUCKETS_);
 
   debug_print("[DEBUG] Calcolato key per %s = %d\n", *path, key);
 
+  //Sono all'ultimo nodo, devo inserire l'elemento se non già esistente
   if(*(path + 1) == NULL)
   {
+    //Non sono in una directory
+    if(!root->isDir)
+      return false;
+
     //Sono all'elemento finale, devo aggiungere qua il file
     if(root->childs+1 > _FS_MAX_CHILDS_)
       return false; //_FS_MAX_CHILDS_REACHED_
 
-    debug_print("[DEBUG] Directory di appartenenza trovata, creazione del nodo BST in corso...\n");
+
+    debug_print("[DEBUG] Directory di appartenenza trovata, creazione del nodo in corso...\n");
 
     //Creo il nodo e sistemo i suoi parametri (sistemerò il parente dopo la tentata creazione nel BST della directory)
     node_t* node = (node_t*)malloc(sizeof(node_t));
     node->fs_parent = root;
     node->isDir = isDir;
     node->childs = 0;
-    node->rb_color = BLACK;
+    //node->rb_color = BLACK;
     node->depth = root->depth + 1;
     node->key = key;
 
     int lenName = strlen(*path) + 1;
     int lenPath = (lenName + (root->path != NULL ? strlen(root->path) : 0) + 1);
-    debug_print("[DEBUG] Parametri di base BST impostati, scrivo i contenuti delle stringhe di dimansione: %d - %d...\n", (int)(lenName * sizeof(char)), (int)(lenPath * sizeof(char)));
+    debug_print("[DEBUG] Parametri di base impostati, scrivo i contenuti delle stringhe di dimansione: %d - %d...\n", (int)(lenName * sizeof(char)), (int)(lenPath * sizeof(char)));
 
     //Alloco lo spazio per le stringhe
     node->name = (char*)malloc(lenName * sizeof(char));
@@ -96,7 +103,7 @@ bool fs_create(node_t* root, char** path, bool isDir)
     strcat(node->path, *path);
     debug_print("[DEBUG] Path nodo impostato a %s\n", node->path);
 
-    debug_print("[DEBUG] Parametri nodo scritti, inserimento nell'albero RB della directory...\n");
+    /*debug_print("[DEBUG] Parametri nodo scritti, inserimento nell'albero RB della directory...\n");
 
     int result = fs_rb_insert(&root->rb_root, node);
     if(result < 0) //Errore di inserimento
@@ -106,13 +113,45 @@ bool fs_create(node_t* root, char** path, bool isDir)
       free(node);
       return false;
     }
+    */
+    debug_print("[DEBUG] Inserisco il nodo nella hash table del livello...\n");
+    if(root->hash_table == NULL)
+    {
+      //Creo la tabella
+      debug_print("[DEBUG] Hash table del livello non ancora inizializzata");
+      root->hash_table = (node_t**)malloc(_FS_HASH_BUCKETS_ * sizeof(node_t*));
+      memset(root->hash_table, 0, _FS_HASH_BUCKETS_ * sizeof(node_t*));
+    }
 
+    //Cerco se esiste un elemento con lo stesso nome
+    node_t* hash_spot = root->hash_table[hash];
+    while(hash_spot != NULL && hash_spot->key != key) //Scorro le collisioni
+      hash_spot = hash_spot->hash_next;
+
+    if(hash_spot != NULL)
+      return false; //Elemento già esistente
+
+    //Aggiorno l'hash table con il nuovo nodo
+    node->hash_next = root->hash_table[hash];
+    root->hash_table[hash] = node;
+
+
+    //Imposto i bambini
     root->childs++;
+    node->next = root->first_child;
+    root->first_child = node;
 
     return true;
   }
 
-  node_t* next = fs_bst_find_node(root->rb_root, key);
+  //Sono in un nodo intermedio, devo ricercare
+  if(root->hash_table == NULL) // Questo livello non ha più sottofigli, il percorso deve essere errato
+    return false;
+
+  node_t* next = root->hash_table[hash]; // = fs_bst_find_node(root->rb_root, key);
+  while(next != NULL && root->key != key) //Trovo il nodo che mi serve
+    next = next->hash_next;
+
   if(next == NULL)
     return false;
 

@@ -5,6 +5,7 @@
 
 #define _FS_MAX_DEPTH_ 255
 #define _FS_MAX_CHILDS_ 1024
+#define _FS_HASH_BUCKETS_ 1259
 #define _MAX_CHAR_COMBINATIONS_ 62
 
 //Error Codes
@@ -33,7 +34,7 @@ typedef struct node_tag
   struct node_tag* first_child; //Contiene il primo figlio per scorrere tutti i figli come lista
   struct node_tag* next;        //Contiene il prossimo elemento su questo livello
   struct node_tag* hash_next;   //Contiene in prossimo elemento con lo stesso hash (Chaining)
-  struct node_tag** hash_table; //Istanziata a dimensione _FS_MAX_CHILDS_ al primo inserimento di un figlio
+  struct node_tag** hash_table; //Istanziata a dimensione _FS_HASH_BUCKETS_ al primo inserimento di un figlio
 
   //Parametri comuni
   int key;

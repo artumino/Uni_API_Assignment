@@ -52,7 +52,7 @@ int main(void)
   char* str;
   int len = 0;
   srand(time(NULL));
-  memset(hash_table, 0, sizeof hash_table);
+  memset(hash_table, -1, sizeof hash_table);
   for(i = 0; i < 1024; i++)
   {
     len = (rand() % 255) + 1;
@@ -68,12 +68,12 @@ int main(void)
     int key = fs_key(str);
     free(str);
     int hash = fs_hash(key, buckets);
+    hash_table[hash]++;
     if(hash_table[hash] > 0)
     {
       printf("%d collisions for hash %d\n", hash_table[hash], hash);
       collisions++;
     }
-    hash_table[hash]++;
   }
   printf("In totale ci sono state %d collisioni su %d buckets\n", collisions, buckets);
 

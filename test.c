@@ -3,7 +3,7 @@
 #include <string.h>
 #include "fs_utils.h"
 
-//File per verificare che l'hash rimanga nei limiti di memoria
+//File per verificare che l'key rimanga nei limiti di memoria
 
 #define CHAR_COMBINATIONS 62
 #define MAX_CHARS 255
@@ -13,7 +13,7 @@ int main(void)
   int total = 0;
   int i = 0;
   int j;
-  int hash;
+  int key;
   for(i = 0; i < MAX_CHARS; i++)
   {
     total += (CHAR_COMBINATIONS - 1) + (CHAR_COMBINATIONS * i);
@@ -30,15 +30,17 @@ int main(void)
     return 0;
   }
 
-  printf("\tHash\t|\tLength\t|\tPercorso\n");
+  printf("\tKey\t|\tLength\t|\tPercorso\n");
   i = 0;
   while(arr_percorso[i] != NULL)
   {
-    hash = fs_hash(arr_percorso[i]);
-    printf("\t%d\t|\t%d\t|\t", hash, fs_hash_length(hash));
+    key = fs_key(arr_percorso[i]);
+    printf("\t%d\t|\t%d\t|\t", key, fs_key_length(key));
     for(j = 0; j <= i; j++)
       printf("%s%s", arr_percorso[j], i == j ? "\n" : "/");
     i++;
   }
+
+  
   return 0;
 }

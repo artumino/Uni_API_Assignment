@@ -50,11 +50,11 @@ bool fs_create(node_t* root, char** path, bool isDir)
     return false; //_FS_FILE_ALREADY_EXISTS_
   }
 
-  int hash = fs_hash(*path);
-  if(hash < 0)
+  int key = fs_key(*path);
+  if(key < 0)
     return false;
 
-  debug_print("[DEBUG] Calcolato hash per %s = %d\n", *path, hash);
+  debug_print("[DEBUG] Calcolato key per %s = %d\n", *path, key);
 
   if(*(path + 1) == NULL)
   {
@@ -71,7 +71,7 @@ bool fs_create(node_t* root, char** path, bool isDir)
     node->childs = 0;
     node->rb_color = BLACK;
     node->depth = root->depth + 1;
-    node->rb_hash = hash;
+    node->key = key;
 
     int lenPath = strlen(*path);
     debug_print("[DEBUG] Parametri di base BST impostati, scrivo i contenuti delle stringhe di dimansione: %d - %d...\n", (int)(lenPath * sizeof(char)), (int)((lenPath + (root->path != NULL ? strlen(root->path) : 0) + 1) * sizeof(char)));
@@ -107,7 +107,7 @@ bool fs_create(node_t* root, char** path, bool isDir)
     return true;
   }
 
-  node_t* next = fs_bst_find_node(root->rb_root, hash);
+  node_t* next = fs_bst_find_node(root->rb_root, key);
   if(next == NULL)
     return false;
 
@@ -128,10 +128,10 @@ int fs_write(node_t* root, char** path, char* content)
   return -1;
 }
 
-//Non ritorno la lunghezza perchè posso facilmente ricavarla facendo ceil((double)(hash+1)/_MAX_CHAR_COMBINATIONS_);
-int fs_hash(char* name)
+//Non ritorno la lunghezza perchè posso facilmente ricavarla facendo ceil((double)(key+1)/_MAX_CHAR_COMBINATIONS_);
+int fs_key(char* name)
 {
-  int hash = 0;
+  int key = 0;
   int len = 0;
   int sChar = 0;
   while(*name != '\0' && *name != '/')
@@ -150,21 +150,28 @@ int fs_hash(char* name)
       sChar -= 61;
     }
     else
-      return _FS_HASH_WRONG_CHARS_; //Caratteri inaspettati nel name
-    hash = sChar + (len++ * _MAX_CHAR_COMBINATIONS_);
+      return _FS_KEY_WRONG_CHARS_; //Caratteri inaspettati nel name
+    key = sChar + (len++ * _MAX_CHAR_COMBINATIONS_);
   }
 
   //Se il ciclo non è mai stato eseguito
   if(len == 0)
-    hash = _FS_HASH_EMPTY_;
+    key = _FS_KEY_EMPTY_;
 
-  return hash;
+  return key;
 }
 
-//Metodo comodo per eseguire il calcolo della lunghezza rispetto all'hash
-int fs_hash_length(int hash)
+//Metodo comodo per eseguire il calcolo della lunghezza rispetto alla key
+int fs_key_length(int key)
 {
-  return ceil((double)(hash+1)/_MAX_CHAR_COMBINATIONS_);
+  return ceil((double)(key+1)/_MAX_CHAR_COMBINATIONS_);
+}
+
+//Metodo per calcolare un'hash con _FS_MAX_CHILDS_ buckets
+int fs_hash(int key)
+{
+  srand(key);
+  return rand() % _FS_MAX_CHILDS_;
 }
 
 //Metodi per effettuare le rotazioni negli alberi binari
@@ -212,15 +219,15 @@ void fs_bst_rotate(node_t** root, node_t* node, bool left)
 }
 
 //Metodo per effettuare la ricerca nei BST
-node_t* fs_bst_find_node(node_t* root, int hash)
+node_t* fs_bst_find_node(node_t* root, int key)
 {
   if(root == NULL)
     return NULL;
 
-  if(root->rb_hash == hash)
+  if(root->key == key)
     return root;
   else
-    return root->rb_hash > hash ? fs_bst_find_node(root->rb_left, hash) : fs_bst_find_node(root->rb_right, hash);
+    return root->key > key ? fs_bst_find_node(root->rb_left, key) : fs_bst_find_node(root->rb_right, key);
 }
 
 int fs_rb_insert(node_t** root, node_t* node)
@@ -234,23 +241,23 @@ int fs_rb_insert(node_t** root, node_t* node)
   while(x != NULL)
   {
     y = x;
-    if(node->rb_hash < x->rb_hash)
+    if(node->key < x->key)
       x = x->rb_left;
-    else if(node->rb_hash > x->rb_hash)
+    else if(node->key > x->key)
       x = x->rb_right;
     else
       return _FS_ITEM_ALREADY_EXISTS_;
   }
 
 
-  debug_print("[DEBUG] Trovato parente, so che il nodo e': %s\n", y == NULL ? "root" : node->rb_hash < y->rb_hash ? "figlio sinistro" : "figlio destro/uguale");
+  debug_print("[DEBUG] Trovato parente, so che il nodo e': %s\n", y == NULL ? "root" : node->key < y->key ? "figlio sinistro" : "figlio destro/uguale");
 
   node->rb_parent = y;
   if(y == NULL)
     *root = node;
-  else if(node->rb_hash < y->rb_hash)
+  else if(node->key < y->key)
     y->rb_left = node;
-  else if(node->rb_hash > y->rb_hash)
+  else if(node->key > y->key)
     y->rb_right = node;
   else
     return _FS_ITEM_ALREADY_EXISTS_;

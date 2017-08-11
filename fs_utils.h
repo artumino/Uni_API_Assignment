@@ -12,8 +12,8 @@
 #define _FS_MAX_DEPTH_REACHED_ -1
 #define _FS_MAX_CHILDS_REACHED_ -2
 #define _FS_FILE_ALREADY_EXISTS_ -3
-#define _FS_HASH_WRONG_CHARS_ -2
-#define _FS_HASH_EMPTY_ -1
+#define _FS_KEY_WRONG_CHARS_ -2
+#define _FS_KEY_EMPTY_ -1
 
 typedef enum rb_color { RED, BLACK } rb_color_t;
 
@@ -28,9 +28,15 @@ typedef struct node_tag
   struct node_tag* rb_right;
   struct node_tag* rb_root;
   rb_color_t rb_color; //1 Red, 0 Black
-  int rb_hash;
+
+  //Organizzazione per HashTable
+  struct node_tag* first_child; //Contiene il primo figlio per scorrere tutti i figli come lista
+  struct node_tag* next;        //Contiene il prossimo elemento su questo livello
+  struct node_tag* hash_next;   //Contiene in prossimo elemento con lo stesso hash (Chaining)
+  struct node_tag** hash_table; //Istanziata a dimensione _FS_MAX_CHILDS_ al primo inserimento di un figlio
 
   //Parametri comuni
+  int key;
   bool isDir;
   int childs;
   int depth;
@@ -47,11 +53,14 @@ int fs_write(node_t* root, char** path, char* contenuto);
 bool fs_delete(node_t* root, char** path, bool recursive);
 node_t* fs_find(node_t* root, char* name); //NULL come ultimo elemento
 
-//Metodi utility per BST-RB
-int fs_hash(char* name);
-int fs_hash_length(int hash);
+//Metodi utility
+int fs_key(char* name);
+int fs_key_length(int key);
+int fs_hash(int key);
+
+//Metodi BST
 void fs_bst_rotate(node_t** root, node_t* node, bool left);
-node_t* fs_bst_find_node(node_t* root, int hash);
+node_t* fs_bst_find_node(node_t* root, int key);
 int fs_rb_insert(node_t** root, node_t* node);
 void fs_rb_insert_fixup(node_t** root, node_t* node);
 #endif

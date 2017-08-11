@@ -18,7 +18,7 @@ int readCommand(char** comando)
   while((c = getchar()) != '\n' && c != EOF)
   {
     //Se non ho uno spazio tra caratteri leggo la stringa
-    if(c != ' ' || clen >= MAX_PARAMS)
+    if(c != ' ' || clen >= MAX_PARAMS - 1)
     {
       str[len++] = c;
       str = (char*)realloc(str, (len + 1) * sizeof(char));
@@ -97,7 +97,36 @@ void parseCommand(char** command, int count, node_t* root)
 
     path = fs_parse_path(command[1]);
     if(path != NULL)
-      printf("%s\n", fs_write(root, path, command[2]) ? "ok" : "no");
+    {
+      int result = fs_write(root, path, command[2]);
+      if(result > 0)
+        printf("ok %d\n", result);
+      else
+        printf("no\n");
+    }
+    else printf("no\n");
+  }
+
+  //read <percorso_file>
+  if(!strcmp(command[0], "read"))
+  {
+    if(count != 2)
+    {
+      printf("no\n");
+      return;
+    }
+
+    debug_print("[DEBUG] Lettura file iniziata...\n");
+
+    path = fs_parse_path(command[1]);
+    if(path != NULL)
+    {
+      char* result = fs_read(root, path);
+      if(result != NULL)
+        printf("ok %s\n", result);
+      else
+        printf("no\n");
+    }
     else printf("no\n");
   }
 }

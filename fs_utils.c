@@ -93,6 +93,7 @@ bool fs_create(node_t* root, char** path, bool isDir)
     //Alloco lo spazio per le stringhe
     node->name = (char*)malloc(lenName * sizeof(char));
     node->path = (char*)malloc(lenPath * sizeof(char));
+    node->content = NULL;
     memset(node->name, 0, lenName + 1);
     memset(node->path, 0, lenPath + 1);
 
@@ -177,16 +178,31 @@ int fs_write(node_t* root, char** path, char* content)
     return contentLen; //Effettuo la scrittura
   }
   else if(path == NULL)
-    return false;
+    return -1;
 
   //Mi trovo in un nodo intermedio, cerco il prossimo nodo in lista
   node_t* next = fs_hash_next_node(root, fs_key(*path));
 
   if(next == NULL)
-    return false;
+    return -1;
 
   debug_print("[DEBUG] Procedo al prossimo nodo\n");
   return fs_write(next, path + 1, content);
+}
+
+char* fs_read(node_t* root, char** path)
+{
+  if(*path == NULL)
+    return root->content;
+
+  //Mi trovo in un nodo intermedio, cerco il prossimo nodo in lista
+  node_t* next = fs_hash_next_node(root, fs_key(*path));
+
+  if(next == NULL)
+    return NULL;
+
+  debug_print("[DEBUG] Procedo al prossimo nodo\n");
+  return fs_read(next, path + 1);
 }
 
 //Non ritorno la lunghezza perchè posso facilmente ricavarla facendo ceil((double)(key+1)/_MAX_CHAR_COMBINATIONS_);

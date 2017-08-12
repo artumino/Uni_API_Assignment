@@ -60,7 +60,7 @@ int fs_key_length(int key);
 int fs_hash(int key, int buckets);
 
 //Metodi hash
-node_t* fs_hash_next_node(node_t* root, int key);
+node_t* fs_hash_next_node(node_t* root, char* name);
 
 //Metodi BST
 void fs_bst_rotate(node_t** root, node_t* node, bool left);

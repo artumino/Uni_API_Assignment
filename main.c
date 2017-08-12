@@ -23,7 +23,7 @@ int readCommand(char** comando)
       str[len++] = c;
       str = (char*)realloc(str, (len + 1) * sizeof(char));
     }
-    else
+    else if(len > 0)
     {
       str[len] = '\0';
       comando[clen++] = str;

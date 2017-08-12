@@ -94,9 +94,15 @@ bool fs_create(node_t* root, char** path, bool isDir)
     //Alloco lo spazio per le stringhe
     node->name = (char*)malloc(lenName * sizeof(char));
     node->path = (char*)malloc(lenPath * sizeof(char));
-    node->content = NULL;
     memset(node->name, 0, lenName + 1);
     memset(node->path, 0, lenPath + 1);
+
+    debug_print("[DEBUG] Creo contenuto per file vuoti");
+    if(!isDir)
+    {
+      node->content = (char*)malloc(sizeof(char));
+      *(node->content) = '\0';
+    }
 
     node->name = strcpy(node->name, *path);
     debug_print("[DEBUG] Nome nodo impostato a %s\n", node->name);
@@ -133,7 +139,7 @@ bool fs_create(node_t* root, char** path, bool isDir)
     //Cerco se esiste un elemento con lo stesso nome
     debug_print("[DEBUG] Cerco se l'elemento è un doppione\n");
     node_t* hash_spot = root->hash_table[hash];
-    while(hash_spot != NULL && hash_spot->key != key) //Scorro le collisioni
+    while(hash_spot != NULL && (hash_spot->key != key || strcmp(hash_spot->name, *path))) //Scorro le collisioni (Effettuo la comparazione carattere per carattere solo se ho le stesse chiavi)
       hash_spot = hash_spot->hash_next;
 
     if(hash_spot != NULL)
@@ -153,7 +159,7 @@ bool fs_create(node_t* root, char** path, bool isDir)
     return true;
   }
 
-  node_t* next = fs_hash_next_node(root, key);
+  node_t* next = fs_hash_next_node(root, *path);
 
   if(next == NULL)
     return false;
@@ -182,7 +188,7 @@ int fs_write(node_t* root, char** path, char* content)
     return -1;
 
   //Mi trovo in un nodo intermedio, cerco il prossimo nodo in lista
-  node_t* next = fs_hash_next_node(root, fs_key(*path));
+  node_t* next = fs_hash_next_node(root, *path);
 
   if(next == NULL)
     return -1;
@@ -197,7 +203,7 @@ char* fs_read(node_t* root, char** path)
     return root->content;
 
   //Mi trovo in un nodo intermedio, cerco il prossimo nodo in lista
-  node_t* next = fs_hash_next_node(root, fs_key(*path));
+  node_t* next = fs_hash_next_node(root, *path);
 
   if(next == NULL)
     return NULL;
@@ -252,19 +258,21 @@ int fs_hash(int key, int buckets)
 }
 
 //Metodo per ricercare un elemento per chiave in una tabella hash
-node_t* fs_hash_next_node(node_t* root, int key)
+node_t* fs_hash_next_node(node_t* root, char* name)
 {
   debug_print("[DEBUG][FIND-NEXT] Controllo che ci siano figli\n");
   //Sono in un nodo intermedio, devo ricercare
   if(root->childs == 0) // Questo livello non ha più sottofigli, il percorso deve essere errato
     return NULL;
 
+  int key = fs_key(name);
+
   if(key < 0)
     return NULL;
 
   debug_print("[DEBUG] Trovo il nodo con il nome che mi serve\n");
   node_t* next = root->hash_table[fs_hash(key, _FS_HASH_BUCKETS_)]; // = fs_bst_find_node(root->rb_root, key);
-  while(next != NULL && next->key != key) //Trovo il nodo che mi serve
+  while(next != NULL && (next->key != key|| strcmp(next->name, name))) //Trovo il nodo che mi serve
     next = next->hash_next;
 
   return next;

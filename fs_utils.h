@@ -32,8 +32,10 @@ typedef struct node_tag
 
   //Organizzazione per HashTable
   struct node_tag* first_child; //Contiene il primo figlio per scorrere tutti i figli come lista
-  struct node_tag* next;        //Contiene il prossimo elemento su questo livello
+  struct node_tag* list_next;        //Contiene il prossimo elemento su questo livello
+  struct node_tag* list_prev;        //Contiene il prossimo elemento su questo livello
   struct node_tag* hash_next;   //Contiene in prossimo elemento con lo stesso hash (Chaining)
+  struct node_tag* hash_prev;   //Contiene in prossimo elemento con lo stesso hash (Chaining)
   struct node_tag** hash_table; //Istanziata a dimensione _FS_HASH_BUCKETS_ al primo inserimento di un figlio
 
   //Parametri comuni

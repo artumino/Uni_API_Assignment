@@ -27,7 +27,7 @@ int main(void)
     total += (CHAR_COMBINATIONS - 1) + (CHAR_COMBINATIONS * i);
   }
   printf("%d\n", total);
-  char percorso[] = "/testasd/effucco/effanculen";
+  char percorso[] = "/a";
   char contenuto[] = "ehehehe";
 
   root.fs_parent = NULL;
@@ -36,6 +36,7 @@ int main(void)
   root.path = NULL;
   root.content = NULL;
   root.childs = 0;
+  root.first_child = NULL;
   root.depth = 0;
   root.isDir = true;
 
@@ -49,6 +50,7 @@ int main(void)
     debug_print("=================== %s ========================\n", str[i]);
     printf("%s\n", fs_create(&root, str, true) ? "ok" : "no");
   }
+  printf("%s\n", fs_delete(&root, fs_parse_path(percorso), true) ? "ok" : "no");
   //char** arr_percorso = fs_parse_path(percorso);
 
 

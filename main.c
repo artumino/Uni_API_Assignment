@@ -137,6 +137,44 @@ void parseCommand(char** command, int count, node_t* root)
     }
     else printf("no\n");
   }
+
+  //delete <percorso_file>
+  if(!strcmp(command[0], "delete"))
+  {
+    if(count != 2)
+    {
+      printf("no\n");
+      return;
+    }
+
+    debug_print("[DEBUG] Rimozione percorso iniziata...\n");
+
+
+    path = fs_parse_path(command[1]);
+
+    if(path != NULL)
+      printf("%s\n", fs_delete(root, path, false) ? "ok" : "no");
+    else printf("no\n");
+  }
+
+  //delete <percorso_file>
+  if(!strcmp(command[0], "delete_r"))
+  {
+    if(count != 2)
+    {
+      printf("no\n");
+      return;
+    }
+
+    debug_print("[DEBUG] Rimozione ricorsiva percorso iniziata...\n");
+
+
+    path = fs_parse_path(command[1]);
+
+    if(path != NULL)
+      printf("%s\n", fs_delete(root, path, true) ? "ok" : "no");
+    else printf("no\n");
+  }
 }
 
 int main(void)
@@ -147,6 +185,7 @@ int main(void)
   root.path = NULL;
   root.content = NULL;
   root.childs = 0;
+  root.first_child = NULL;
   root.depth = 0;
   root.isDir = true;
 

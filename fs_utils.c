@@ -27,6 +27,8 @@ char** fs_parse_path(char* path)
   while( token != NULL )
   {
     path_arr[i] = token;
+    //path_arr[i] = (char*)malloc((strlen(token) + 1) * sizeof(char));
+    //strcpy(path_arr[i], token);
     token = strtok(NULL, "/");
     i++;
     realloc(path_arr, (i+1) * sizeof(char*));
@@ -83,6 +85,7 @@ bool fs_create(node_t* root, char** path, bool isDir)
     node->fs_parent = root;
     node->isDir = isDir;
     node->childs = 0;
+    node->first_child = NULL;
     //node->rb_color = BLACK;
     node->depth = root->depth + 1;
     node->key = key;
@@ -97,9 +100,9 @@ bool fs_create(node_t* root, char** path, bool isDir)
     memset(node->name, 0, lenName + 1);
     memset(node->path, 0, lenPath + 1);
 
-    debug_print("[DEBUG] Creo contenuto per file vuoti");
     if(!isDir)
     {
+      debug_print("[DEBUG] Creo contenuto per file vuoti\n");
       node->content = (char*)malloc(sizeof(char));
       *(node->content) = '\0';
     }
@@ -145,15 +148,22 @@ bool fs_create(node_t* root, char** path, bool isDir)
     if(hash_spot != NULL)
       return false; //Elemento già esistente
 
-    debug_print("[DEBUG] Inserisco l'elemto nell'hashtable ed aggiorno il padre\n");
+    debug_print("[DEBUG] Inserisco l'elemto nell'hashtable\n");
     //Aggiorno l'hash table con il nuovo nodo
     node->hash_next = root->hash_table[hash];
+    if(node->hash_next != NULL)
+      node->hash_next->hash_prev = node;
+    node->hash_prev = NULL;
     root->hash_table[hash] = node;
 
 
+    debug_print("[DEBUG] Aggiorno il padre e la struttura dei figli\n");
     //Imposto i bambini
     root->childs++;
-    node->next = root->first_child;
+    node->list_next = root->first_child;
+    if(node->list_next != NULL)
+      node->list_next->list_prev = node;
+    node->list_prev = NULL;
     root->first_child = node;
 
     return true;
@@ -210,6 +220,57 @@ char* fs_read(node_t* root, char** path)
 
   debug_print("[DEBUG] Procedo al prossimo nodo\n");
   return fs_read(next, path + 1);
+}
+
+bool fs_delete(node_t* root, char** path, bool recursive)
+{
+  if(*path == NULL)
+  {
+    //Mi trovo nel nodo da cancellare
+    if(recursive)
+    {
+      while(root->first_child != NULL)
+        fs_delete(root->first_child, path, true);
+    }
+
+    //Se ho figli, errore (se è ricorsivo sono sicuro che li ho cancellati tutti)
+    if(root->childs > 0)
+      return false;
+
+    //Sistemo la tabella hash
+    if(root->hash_prev == NULL) //Sono la prima entry della tabella hash
+      root->fs_parent->hash_table[fs_hash(root->key, _FS_HASH_BUCKETS_)] = root->hash_next;
+
+    if(root->hash_prev != NULL)
+      root->hash_prev->hash_next = root->hash_next;
+
+    if(root->hash_next != NULL)
+      root->hash_next->hash_prev = root->hash_prev;
+
+    //Sistemo la lista dei figli ordinata
+    if(root->list_prev == NULL)
+      root->fs_parent->first_child = root->list_next;
+
+    if(root->list_prev != NULL)
+      root->list_prev->list_next = root->list_next;
+
+    if(root->list_next != NULL)
+      root->list_next->list_prev = root->list_prev;
+
+    root->fs_parent->childs--;
+    free(root);
+
+    return true;
+  }
+
+  //Mi trovo in un nodo intermedio, cerco il prossimo nodo in lista
+  node_t* next = fs_hash_next_node(root, *path);
+
+  if(next == NULL)
+    return false;
+
+  debug_print("[DEBUG] Procedo al prossimo nodo\n");
+  return fs_delete(next, path + 1, recursive);
 }
 
 //Non ritorno la lunghezza perchè posso facilmente ricavarla facendo ceil((double)(key+1)/_MAX_CHAR_COMBINATIONS_);

@@ -175,6 +175,31 @@ void parseCommand(char** command, int count, node_t* root)
       printf("%s\n", fs_delete(root, path, true) ? "ok" : "no");
     else printf("no\n");
   }
+
+  //find <name>
+  if(!strcmp(command[0], "find"))
+  {
+    if(count != 2)
+    {
+      printf("no\n");
+      return;
+    }
+
+    debug_print("[DEBUG] Ricerca ricorsiva nome iniziata...\n");
+
+    if(command[1] != NULL)
+    {
+      node_t** findResults = fs_find(root, command[1], fs_key(command[1]),NULL, NULL);
+      debug_print("[DEBUG] Ricerca ricorsiva conclusa stampo risultati...\n");
+      int i = 0;
+      while(findResults[i] != NULL)
+      {
+        printf("ok %d\n", findResults[i]->key);
+        i++;
+      }
+    }
+    else printf("no\n");
+  }
 }
 
 int main(void)

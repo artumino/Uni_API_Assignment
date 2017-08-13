@@ -273,6 +273,43 @@ bool fs_delete(node_t* root, char** path, bool recursive)
   return fs_delete(next, path + 1, recursive);
 }
 
+//Metodo per la ricerca di un elemento
+node_t** fs_find(node_t* root, char* name, int key, node_t** items, int* count)
+{
+  //Si porta dietro la lista elementi, sennò la crea
+  if(items == NULL)
+  {
+    debug_print("[DEBUG] Lista elementi non ancora definita, alloco memoria per le risorse\n");
+    items = (node_t**)malloc(sizeof(node_t*));
+    items[0] = NULL;
+    count = (int*)malloc(sizeof(int));
+    *count = 0;
+  }
+
+  //Se ho concluso con un nodo
+  debug_print("[DEBUG] Controllo se ho concluso con il nodo\n");
+  if(root == NULL)
+    return items;
+
+  if(key == root->key && !strcmp(root->name, name))
+  {
+    debug_print("[DEBUG] Match trovato, aggiungo elemento alla lista dei risultati per un totale di %d elementi\n", (*count) + 1);
+    items[(*count)++] = root;
+    realloc(items, ((*count) + 1) * sizeof(node_t*));
+    items[*count] = NULL;
+  }
+
+  debug_print("[DEBUG] Espando la ricerca ai figli\n");
+  fs_find(root->first_child, name, key, items, count);
+
+  debug_print("[DEBUG] Controllo se sono in root\n");
+  if(root->fs_parent == NULL)  //Sono nella root, posso pulire la memoria
+    free(count);
+
+  debug_print("[DEBUG] Procedo al prossimo sottofiglio, coetaneo di %s\n", root->name);
+  return fs_find(root->list_next, name, key, items, count);
+}
+
 //Non ritorno la lunghezza perchè posso facilmente ricavarla facendo ceil((double)(key+1)/_MAX_CHAR_COMBINATIONS_);
 int fs_key(char* name)
 {

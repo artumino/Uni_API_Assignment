@@ -54,7 +54,7 @@ bool fs_create(node_t* root, char** path, bool isDir);
 char* fs_read(node_t* root, char** path);
 int fs_write(node_t* root, char** path, char* contenuto);
 bool fs_delete(node_t* root, char** path, bool recursive);
-node_t* fs_find(node_t* root, char* name); //NULL come ultimo elemento
+node_t** fs_find(node_t* root, char* name, int key, node_t** items, int* count); //NULL come ultimo elemento
 
 //Metodi utility
 int fs_key(char* name);

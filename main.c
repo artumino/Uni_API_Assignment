@@ -9,7 +9,7 @@
 #define MAX_PARAMS 3
 
 static node_t root;
-int readCommand(char** comando)
+int readCommand(char** command)
 {
   char* str = (char*)malloc(sizeof(char));
   int c;
@@ -26,7 +26,7 @@ int readCommand(char** comando)
     else if(len > 0)
     {
       str[len] = '\0';
-      comando[clen++] = str;
+      command[clen++] = str;
       str = (char*)malloc(sizeof(char)); //Reinstazio una nuova stringa, pronta per il prossimo parametro
       len = 0;
     }
@@ -36,7 +36,7 @@ int readCommand(char** comando)
   if(clen < MAX_PARAMS)
   {
     str[len] = '\0';
-    comando[clen++] = str;
+    command[clen++] = str;
   }
 
   return clen;
@@ -189,14 +189,16 @@ void parseCommand(char** command, int count, node_t* root)
 
     if(command[1] != NULL)
     {
-      node_t** findResults = fs_find(root, command[1], fs_key(command[1]),NULL, NULL);
+      int count = 0;
+      node_t** findResults = fs_find(root, command[1], fs_key(command[1]), NULL, &count);
       debug_print("[DEBUG] Ricerca ricorsiva conclusa stampo risultati...\n");
       int i = 0;
       while(findResults[i] != NULL)
       {
-        printf("ok %d\n", findResults[i]->key);
+        printf("ok %s\n", findResults[i]->path);
         i++;
       }
+      free(findResults);
     }
     else printf("no\n");
   }
@@ -214,19 +216,19 @@ int main(void)
   root.depth = 0;
   root.isDir = true;
 
-  char** comando = NULL;
+  char** command = NULL;
   int count = 0;
   do
   {
     //Reistanzio comando
-    if(comando != NULL)
-      free(comando);
-    comando =  (char**)malloc(MAX_PARAMS * sizeof(char*));
+    if(command != NULL)
+      free(command);
+    command =  (char**)malloc(MAX_PARAMS * sizeof(char*));
 
     debug_print("Scelta--> ");
     //Leggo il prossimo comando
-    count = readCommand(comando);
-    parseCommand(comando, count, &root);
-  } while(count > 0 && strcmp(comando[0], "exit"));
+    count = readCommand(command);
+    parseCommand(command, count, &root);
+  } while(count > 0 && strcmp(command[0], "exit"));
   return 1;
 }

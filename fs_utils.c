@@ -31,7 +31,7 @@ char** fs_parse_path(char* path)
     //strcpy(path_arr[i], token);
     token = strtok(NULL, "/");
     i++;
-    realloc(path_arr, (i+1) * sizeof(char*));
+    path_arr = (char**)realloc(path_arr, (i+1) * sizeof(char*));
   }
 
   if(i == 0)
@@ -54,10 +54,7 @@ bool fs_create(node_t* root, char** path, bool isDir)
     return false; //_FS_MAX_DEPTH_REACHED_
   }
   if(*path == NULL)
-  {
-    //Esiste già il file/dir che volevo creare
-    return false; //_FS_FILE_ALREADY_EXISTS_
-  }
+    return false; //_FS_FILE_ALREADY_EXISTS_ Esiste già il file/dir che volevo creare
 
   int key = fs_key(*path);
   if(key < 0)
@@ -277,12 +274,14 @@ bool fs_delete(node_t* root, char** path, bool recursive)
 node_t** fs_find(node_t* root, char* name, int key, node_t** items, int* count)
 {
   //Si porta dietro la lista elementi, sennò la crea
-  if(items == NULL)
+  if(items == NULL || count == NULL)
   {
-    debug_print("[DEBUG] Lista elementi non ancora definita, alloco memoria per le risorse\n");
-    items = (node_t**)malloc(sizeof(node_t*));
-    items[0] = NULL;
+    debug_print("[DEBUG] Lista elementi non ancora definita, inizializzo la lista\n");
+    items  = (node_t**)malloc(sizeof(node_t*));
     count = (int*)malloc(sizeof(int));
+
+    //Mi assicuro che la memoria sia azzerata
+    items[0] = NULL;
     *count = 0;
   }
 
@@ -295,16 +294,12 @@ node_t** fs_find(node_t* root, char* name, int key, node_t** items, int* count)
   {
     debug_print("[DEBUG] Match trovato, aggiungo elemento alla lista dei risultati per un totale di %d elementi\n", (*count) + 1);
     items[(*count)++] = root;
-    realloc(items, ((*count) + 1) * sizeof(node_t*));
+    items = (node_t**)realloc(items, ((*count) + 1) * sizeof(node_t*));
     items[*count] = NULL;
   }
 
   debug_print("[DEBUG] Espando la ricerca ai figli\n");
-  fs_find(root->first_child, name, key, items, count);
-
-  debug_print("[DEBUG] Controllo se sono in root\n");
-  if(root->fs_parent == NULL)  //Sono nella root, posso pulire la memoria
-    free(count);
+  items = fs_find(root->first_child, name, key, items, count);
 
   debug_print("[DEBUG] Procedo al prossimo sottofiglio, coetaneo di %s\n", root->name);
   return fs_find(root->list_next, name, key, items, count);

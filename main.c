@@ -192,12 +192,18 @@ void parseCommand(char** command, int count, node_t* root)
       int count = 0;
       node_t** findResults = fs_find(root, command[1], fs_key(command[1]), NULL, &count);
       debug_print("[DEBUG] Ricerca ricorsiva conclusa stampo risultati...\n");
-      int i = 0;
-      while(findResults[i] != NULL)
+
+      if(count > 0)
       {
-        printf("ok %s\n", findResults[i]->path);
-        i++;
+        int i = 0;
+        while(findResults[i] != NULL)
+        {
+          printf("ok %s\n", findResults[i]->path);
+          i++;
+        }
       }
+      else
+        printf("no\n");
       free(findResults);
     }
     else printf("no\n");

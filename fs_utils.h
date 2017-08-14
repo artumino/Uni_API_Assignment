@@ -16,19 +16,10 @@
 #define _FS_KEY_WRONG_CHARS_ -2
 #define _FS_KEY_EMPTY_ -1
 
-typedef enum rb_color { RED, BLACK } rb_color_t;
-
 typedef struct node_tag
 {
   //Accesso come lista (Struttura ad Albero)
   struct node_tag* fs_parent;
-
-  //Organizzazione interna alla Directory ad Albero RB
-  struct node_tag* rb_parent;
-  struct node_tag* rb_left;
-  struct node_tag* rb_right;
-  struct node_tag* rb_root;
-  rb_color_t rb_color; //1 Red, 0 Black
 
   //Organizzazione per HashTable
   struct node_tag* first_child; //Contiene il primo figlio per scorrere tutti i figli come lista
@@ -63,10 +54,4 @@ int fs_hash(int key, int buckets);
 
 //Metodi hash
 node_t* fs_hash_next_node(node_t* root, char* name);
-
-//Metodi BST
-void fs_bst_rotate(node_t** root, node_t* node, bool left);
-node_t* fs_bst_find_node(node_t* root, int key);
-int fs_rb_insert(node_t** root, node_t* node);
-void fs_rb_insert_fixup(node_t** root, node_t* node);
 #endif

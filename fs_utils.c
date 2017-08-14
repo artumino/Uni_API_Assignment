@@ -373,3 +373,47 @@ node_t* fs_hash_next_node(node_t* root, char* name)
 
   return next;
 }
+
+void fs_mergesort(node_t** items, int left, int right)
+{
+  if(left < right)
+  {
+    int center = (left + right) / 2;
+    fs_mergesort(items, left, center);
+    fs_mergesort(items, center + 1, right);
+    fs_merge(items, left, center, right);
+  }
+}
+
+void fs_merge(node_t** items, int left, int center, int right)
+{
+  int i = left;
+  int j = center + 1;
+  int k = 0;
+  node_t* queue[right - left - 1];
+
+  //Esegue il confronto
+  while(i <= center && j <= right)
+  {
+    if(strcmp(items[i]->path, items[j]->path) <= 0)
+    {
+      queue[k] = items[i];
+      i++;
+    }
+    else
+    {
+      queue[k] = items[j];
+      j++;
+    }
+    k++;
+  }
+
+  while(i <= center)
+    queue[k++] = items[i++];
+
+  while(j <= right)
+    queue[k++] = items[j++];
+
+  for(k = left; k <= right; k++)
+    items[k] = queue[k-left];
+}

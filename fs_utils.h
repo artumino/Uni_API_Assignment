@@ -54,4 +54,8 @@ int fs_hash(int key, int buckets);
 
 //Metodi hash
 node_t* fs_hash_next_node(node_t* root, char* name);
+
+//Sort
+void fs_mergesort(node_t** items, int left, int right);
+void fs_merge(node_t** items, int left, int center, int right);
 #endif

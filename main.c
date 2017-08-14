@@ -191,6 +191,7 @@ void parseCommand(char** command, int count, node_t* root)
     {
       int count = 0;
       node_t** findResults = fs_find(root, command[1], fs_key(command[1]), NULL, &count);
+      fs_mergesort(findResults, 0, count-1);
       debug_print("[DEBUG] Ricerca ricorsiva conclusa stampo risultati...\n");
 
       if(count > 0)
@@ -213,7 +214,6 @@ void parseCommand(char** command, int count, node_t* root)
 int main(void)
 {
   root.fs_parent = NULL;
-  root.rb_root = NULL;
   root.name = NULL;
   root.path = NULL;
   root.content = NULL;

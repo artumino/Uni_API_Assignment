@@ -110,6 +110,7 @@ void parseCommand(char** command, int count, node_t* root)
           printf("ok %d\n", result);
         else
           printf("no\n");
+        command[2] -= 1; //Ritorno al puntatore giusto per poter pulire
       }
     }
     else printf("no\n");
@@ -225,23 +226,25 @@ int main(void)
   root.depth = 0;
   root.isDir = true;
 
-  char** command = NULL;
+  char* command[MAX_PARAMS] = {NULL};
   int count = 0;
   do
   {
     //Reistanzio comando
-    if(command != NULL)
+    if(command[0] != NULL)
     {
       for(int j = 0; j < count; j++)
         free(command[j]);
-      free(command);
+      debug_print("[DEBUG] Puliti sottoargomenti\n");
     }
-    command =  (char**)malloc(MAX_PARAMS * sizeof(char*));
+    command[0] = NULL;
+    command[1] = NULL;
+    command[2] = NULL;
 
     debug_print("Scelta--> ");
     //Leggo il prossimo comando
     count = readCommand(command);
     parseCommand(command, count, &root);
   } while(count > 0 && strcmp(command[0], "exit"));
-  return 1;
+  return 0;
 }

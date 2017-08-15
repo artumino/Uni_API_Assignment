@@ -83,6 +83,8 @@ bool fs_create(node_t* root, char** path, bool isDir)
     node->isDir = isDir;
     node->childs = 0;
     node->first_child = NULL;
+    node->hash_table = NULL;
+    node->content = NULL;
     //node->rb_color = BLACK;
     node->depth = root->depth + 1;
     node->key = key;
@@ -116,17 +118,6 @@ bool fs_create(node_t* root, char** path, bool isDir)
     strcat(node->path, *path);
     debug_print("[DEBUG] Path nodo impostato a %s\n", node->path);
 
-    /*debug_print("[DEBUG] Parametri nodo scritti, inserimento nell'albero RB della directory...\n");
-
-    int result = fs_rb_insert(&root->rb_root, node);
-    if(result < 0) //Errore di inserimento
-    {
-      debug_print("[DEBUG] Impossibile inserire il file nel BST-RB, file già esistente!\n");
-
-      free(node);
-      return false;
-    }
-    */
     debug_print("[DEBUG] Inserisco il nodo nella hash table del livello...\n");
     if(root->childs == 0)
     {
@@ -255,6 +246,14 @@ bool fs_delete(node_t* root, char** path, bool recursive)
       root->list_next->list_prev = root->list_prev;
 
     root->fs_parent->childs--;
+    if(root->content != NULL)
+      free(root->content);
+    if(root->path != NULL)
+      free(root->path);
+    if(root->name != NULL)
+      free(root->name);
+    if(root->hash_table != NULL)
+      free(root->hash_table);
     free(root);
 
     return true;

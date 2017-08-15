@@ -27,11 +27,13 @@ int main(void)
     total += (CHAR_COMBINATIONS - 1) + (CHAR_COMBINATIONS * i);
   }
   printf("%d\n", total);
-  char percorso[] = "/a";
+  const char pconst[] = "/a/dsadasdsa/fsadasdas/fsadasdsa";
+  char* percorso;
   char contenuto[] = "ehehehe";
+  char comando[] = "create_dir /dir0rid";
+  char* command[3];
 
   root.fs_parent = NULL;
-  root.rb_root = NULL;
   root.name = NULL;
   root.path = NULL;
   root.content = NULL;
@@ -40,6 +42,15 @@ int main(void)
   root.depth = 0;
   root.isDir = true;
 
+  for(i = 0; i < 200000000; i++)
+  {
+    percorso = (char*)malloc(33 * sizeof(char));
+    strcpy(percorso, "/a/dsadasdsa/fsadasdas/fsadasdsa");
+    char** path = fs_parse_path(percorso);
+    free(percorso);
+    free(path);
+  }
+/*
   char* str[256];
   memset(str, 0, 257*sizeof(char*));
 
@@ -53,7 +64,7 @@ int main(void)
   printf("%s\n", fs_delete(&root, fs_parse_path(percorso), true) ? "ok" : "no");
   //char** arr_percorso = fs_parse_path(percorso);
 
-
+*/
   /*if(arr_percorso == NULL)
   {
     printf("Percorso malformato, manca l'indicatore della root...\n");

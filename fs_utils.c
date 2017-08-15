@@ -64,7 +64,7 @@ bool fs_create(node_t* root, char** path, bool isDir)
   debug_print("[DEBUG] Calcolato key per %s = %d\n", *path, key);
 
   //Sono all'ultimo nodo, devo inserire l'elemento se non già esistente
-  if(*(path + 1) == NULL )//|| *(path + 1)[0] == 0) //Investigare sul secondo check
+  if(*(path + 1) == NULL ) //Investigare sul secondo check
   {
     //Non sono in una directory
     if(!root->isDir)
@@ -89,13 +89,13 @@ bool fs_create(node_t* root, char** path, bool isDir)
 
     int lenName = strlen(*path) + 1;
     int lenPath = (lenName + (root->path != NULL ? strlen(root->path) : 0) + 1);
-    debug_print("[DEBUG] Parametri di base impostati, scrivo i contenuti delle stringhe di dimansione: %d - %d...\n", (int)(lenName * sizeof(char)), (int)(lenPath * sizeof(char)));
+    debug_print("[DEBUG] Parametri di base impostati, scrivo i contenuti delle stringhe di dimensione: %d - %d...\n", (int)(lenName * sizeof(char)), (int)(lenPath * sizeof(char)));
 
     //Alloco lo spazio per le stringhe
     node->name = (char*)malloc(lenName * sizeof(char));
     node->path = (char*)malloc(lenPath * sizeof(char));
-    memset(node->name, 0, lenName + 1);
-    memset(node->path, 0, lenPath + 1);
+    memset(node->name, 0, lenName * sizeof(char));
+    memset(node->path, 0, lenPath * sizeof(char));
 
     if(!isDir)
     {
@@ -145,7 +145,7 @@ bool fs_create(node_t* root, char** path, bool isDir)
     if(hash_spot != NULL)
       return false; //Elemento già esistente
 
-    debug_print("[DEBUG] Inserisco l'elemto nell'hashtable\n");
+    debug_print("[DEBUG] Inserisco l'elemento nell'hashtable\n");
     //Aggiorno l'hash table con il nuovo nodo
     node->hash_next = root->hash_table[hash];
     if(node->hash_next != NULL)
@@ -316,7 +316,8 @@ int fs_key(char* name)
   int sChar = 0;
   while(*name != '\0' && *name != '/')
   {
-    sChar = *name++;
+    sChar = *name;
+    name++;
     if(sChar > 47 && sChar < 58) //0-9 -> 0-9
     {
       sChar -= 48;

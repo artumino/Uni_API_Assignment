@@ -44,7 +44,7 @@ int readCommand(char** command)
 
 void parseCommand(char** command, int count, node_t* root)
 {
-  char** path;
+  char** path = NULL;
   if(count < 1)
     return;
 
@@ -209,6 +209,9 @@ void parseCommand(char** command, int count, node_t* root)
     }
     else printf("no\n");
   }
+
+  if(path != NULL)
+    free(path);
 }
 
 int main(void)
@@ -228,7 +231,11 @@ int main(void)
   {
     //Reistanzio comando
     if(command != NULL)
+    {
+      for(int j = 0; j < count; j++)
+        free(command[j]);
       free(command);
+    }
     command =  (char**)malloc(MAX_PARAMS * sizeof(char*));
 
     debug_print("Scelta--> ");

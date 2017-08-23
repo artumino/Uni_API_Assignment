@@ -331,7 +331,7 @@ int fs_key(char* name)
     }
     else
       return _FS_KEY_WRONG_CHARS_; //Caratteri inaspettati nel name
-    key = sChar + (len++ * _MAX_CHAR_COMBINATIONS_);
+    key += sChar + (len++ * _MAX_CHAR_COMBINATIONS_);
   }
 
   //Se il ciclo non è mai stato eseguito
@@ -339,6 +339,37 @@ int fs_key(char* name)
     key = _FS_KEY_EMPTY_;
 
   return key;
+}
+
+//Metodo usato per calcolare la chiave carattere per carattere
+int fs_partial_key(int currentKey, int currentLen, char c)
+{
+  if(currentKey < _FS_KEY_EMPTY_)
+    return currentKey;
+
+  if(c > 47 && c < 58) //0-9 -> 0-9
+    c -= 48;
+  else if(c > 64 && c < 91) // A-Z -> 10-35
+    c -= 55;
+  else if(c > 96 && c < 123)
+    c -= 61;
+  else
+    return _FS_KEY_WRONG_CHARS_; //Caratteri inaspettati nel name
+  return (currentKey < 0 ? 0 : currentKey) + ((int)c + (currentLen * _MAX_CHAR_COMBINATIONS_));
+}
+
+//Controlla se il percorso è formato correttamente
+bool fs_is_path_valid(int keys[])
+{
+  int i = 0;
+
+  if(keys == NULL)
+    return false;
+
+  while(keys[i] != _FS_KEY_END_)
+    if(keys[i++] < 0)
+      return false;
+  return true;
 }
 
 //Metodo comodo per eseguire il calcolo della lunghezza rispetto alla key

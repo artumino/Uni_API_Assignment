@@ -13,6 +13,7 @@
 #define _FS_MAX_DEPTH_REACHED_ -1
 #define _FS_MAX_CHILDS_REACHED_ -2
 #define _FS_FILE_ALREADY_EXISTS_ -3
+#define _FS_KEY_END_ -3
 #define _FS_KEY_WRONG_CHARS_ -2
 #define _FS_KEY_EMPTY_ -1
 
@@ -49,6 +50,8 @@ node_t** fs_find(node_t* root, char* name, int key, node_t** items, int* count);
 
 //Metodi utility
 int fs_key(char* name);
+int fs_partial_key(int currentKey, int currentLen, char c);
+bool fs_is_path_valid(int keys[]);
 int fs_key_length(int key);
 int fs_hash(int key, int buckets);
 

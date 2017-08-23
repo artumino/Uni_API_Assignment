@@ -24,10 +24,11 @@ int main(void)
   int key;
   for(i = 0; i < MAX_CHARS; i++)
   {
-    total += (CHAR_COMBINATIONS - 1) + (CHAR_COMBINATIONS * i);
+    total = fs_partial_key(total, i, 'Z');//+= (CHAR_COMBINATIONS - 1) + (CHAR_COMBINATIONS * i);
   }
   printf("%d\n", total);
   const char pconst[] = "/a/dsadasdsa/fsadasdas/fsadasdsa";
+  char max[] = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz";
   char* percorso;
   char contenuto[] = "ehehehe";
   char comando[] = "create_dir /dir0rid";
@@ -42,6 +43,7 @@ int main(void)
   root.depth = 0;
   root.isDir = true;
 
+/*
   for(i = 0; i < 200000000; i++)
   {
     percorso = (char*)malloc(33 * sizeof(char));
@@ -49,7 +51,7 @@ int main(void)
     char** path = fs_parse_path(percorso);
     free(percorso);
     free(path);
-  }
+  }*/
 /*
   char* str[256];
   memset(str, 0, 257*sizeof(char*));
@@ -82,7 +84,7 @@ int main(void)
     i++;
   }*/
 
-  /*int buckets = 1259;
+  int buckets = 1259;
   int hash_table[buckets];
   int collisions = 0;
   char extracted = '\0';
@@ -112,7 +114,7 @@ int main(void)
       collisions++;
     }
   }
-  printf("In totale ci sono state %d collisioni su %d buckets\n", collisions, buckets);*/
+  printf("In totale ci sono state %d collisioni su %d buckets\n", collisions, buckets);
 
 
   return 0;

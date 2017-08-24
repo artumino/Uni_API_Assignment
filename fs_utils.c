@@ -7,45 +7,6 @@
 #include "local_random.h"
 #include "fs_utils.h"
 
-char** fs_parse_path(char* path)
-{
-  //Gestione errori, impongo che ogni percorso parta dalla root
-  int pathLen = strlen(path);
-  if(pathLen == 0 || path[0] != '/')
-    return NULL;
-  //Ignoro il primo carattere (Avevo un free inutile)
-  //memmove(path, path+1, pathLen);
-  //path += 1;
-
-  char** path_arr = (char**)malloc(sizeof(char*));
-  path_arr[0] = NULL; //Imposto il primo elemento a null
-
-  char *token;
-  int i = 0;
-
-  token = strtok(path, "/");
-  while( token != NULL )
-  {
-    path_arr[i] = token;
-    //path_arr[i] = (char*)malloc((strlen(token) + 1) * sizeof(char));
-    //strcpy(path_arr[i], token);
-    token = strtok(NULL, "/");
-    i++;
-    path_arr = (char**)realloc(path_arr, (i+1) * sizeof(char*));
-  }
-
-  if(i == 0)
-  {
-    free(path_arr);
-    return NULL;
-  }
-
-  debug_print("[DEBUG] Parsing della path effettuato, profondita rilevata: %d\n", i);
-
-  path_arr[i] = NULL; //Imposto l'ultimo elemento a null
-  return path_arr;
-}
-
 bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
 {
   if(root->depth + 1 > _FS_MAX_DEPTH_)

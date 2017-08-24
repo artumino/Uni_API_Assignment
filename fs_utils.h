@@ -42,7 +42,6 @@ typedef struct node_tag
 } node_t;
 
 //Interfaccia per i comandi da console
-char** fs_parse_path(char* path);
 bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir);
 char* fs_read(node_t* root, char** path);
 int fs_write(node_t* root, char** path, char* content, int contentLen);
@@ -52,7 +51,6 @@ node_t** fs_find(node_t* root, char* name, int key, node_t** items, int* count);
 //Metodi utility
 int fs_key(char* name);
 int fs_partial_key(int currentKey, int currentLen, char c);
-bool fs_is_path_valid(int keys[]);
 int fs_key_length(int key);
 int fs_hash(int key, int buckets);
 

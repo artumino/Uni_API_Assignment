@@ -53,6 +53,7 @@ typedef struct command_tag
   int* name_key;
   int* name_len;
   char* content;
+  bool isPathValid;
   int content_len;
   int pathBufferSize;
   int count;
@@ -112,20 +113,6 @@ int fs_partial_key(int currentKey, int currentLen, char c)
   else
     return _FS_KEY_WRONG_CHARS_; //Caratteri inaspettati nel name
   return (currentKey < 0 ? 0 : currentKey) + ((int)c + (currentLen * _MAX_CHAR_COMBINATIONS_));
-}
-
-//Controlla se il percorso è formato correttamente
-bool fs_is_path_valid(int keys[])
-{
-  int i = 0;
-
-  if(keys == NULL)
-    return false;
-
-  while(keys[i] != _FS_KEY_END_)
-    if(keys[i++] < 0)
-      return false;
-  return true;
 }
 
 //Metodo comodo per eseguire il calcolo della lunghezza rispetto alla key
@@ -246,8 +233,8 @@ bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
     //Alloco lo spazio per le stringhe
     node->name = (char*)malloc(lenName * sizeof(char));
     node->path = (char*)malloc(lenPath * sizeof(char));
-    memset(node->name, 0, lenName * sizeof(char));
-    memset(node->path, 0, lenPath * sizeof(char));
+    //memset(node->name, 0, lenName * sizeof(char));
+    //memset(node->path, 0, lenPath * sizeof(char));
 
     if(!isDir)
     {
@@ -257,15 +244,21 @@ bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
       *(node->content) = '\0';
     }
 
-    node->name = strcpy(node->name, *path);
-    if(root->path != NULL)
+    //node->name = strcpy(node->name, *path);
+    memcpy(node->name, *path, lenName * sizeof(char));
+    if(root->path_len > 0)
     {
-      node->path = strcpy(node->path, root->path);
-      strcat(node->path, "/");
+      //node->path = strcpy(node->path, root->path);
+      memcpy(node->path, root->path, root->path_len * sizeof(char));
+      node->path[root->path_len] = '/';
+      //strcat(node->path, "/");
     }
     else
-      strcpy(node->path, "/");
-    strcat(node->path, *path);
+      node->path[0] = '/';
+      //strcpy(node->path, "/");
+
+    memcpy(node->path + root->path_len + 1, *path, lenName);
+    //strcat(node->path, *path);
 
     if(root->childs == 0)
     {
@@ -471,6 +464,10 @@ int readCommand(command_t* command)
           command->name_key[pathLen] = currentKey;
           command->name_len[pathLen] = len;
           command->path[pathLen++] = str;
+
+          if(currentKey < 0)
+            command->isPathValid = false;
+
           if(pathLen >= command->pathBufferSize)
           {
             command->pathBufferSize *= 2;
@@ -510,6 +507,10 @@ int readCommand(command_t* command)
         command->name_key[pathLen] = currentKey;
         command->name_len[pathLen] = len;
         command->path[pathLen++] = str;
+
+        if(currentKey < 0)
+          command->isPathValid = false;
+
         if(pathLen >= command->pathBufferSize)
         {
           command->pathBufferSize += 1;
@@ -545,6 +546,10 @@ int readCommand(command_t* command)
       command->name_key[pathLen] = currentKey;
       command->name_len[pathLen] = len;
       command->path[pathLen++] = str;
+
+      if(currentKey < 0)
+        command->isPathValid = false;
+
       if(pathLen >= command->pathBufferSize)
       {
         command->pathBufferSize += 1;
@@ -582,7 +587,7 @@ void parseCommand(command_t* command, node_t* root)
 
 
 
-    if(fs_is_path_valid(command->name_key))
+    if(command->isPathValid)
       printf("%s\n", fs_create(root, command->path, command->name_key, command->name_len, false) ? "ok" : "no");
     else
       printf("no\n");
@@ -599,7 +604,7 @@ void parseCommand(command_t* command, node_t* root)
     }
 
 
-    if(fs_is_path_valid(command->name_key))
+    if(command->isPathValid)
       printf("%s\n", fs_create(root, command->path, command->name_key, command->name_len, true) ? "ok" : "no");
     else
       printf("no\n");
@@ -616,7 +621,7 @@ void parseCommand(command_t* command, node_t* root)
     }
 
 
-    if(fs_is_path_valid(command->name_key))
+    if(command->isPathValid)
     {
       if(command->content_len < 2 || command->content[0] != '"' || command->content[command->content_len - 1] != '"')
       {
@@ -657,7 +662,7 @@ void parseCommand(command_t* command, node_t* root)
     }
 
 
-    if(fs_is_path_valid(command->name_key))
+    if(command->isPathValid)
     {
       char* result = fs_read(root, command->path);
       if(result != NULL)
@@ -680,7 +685,7 @@ void parseCommand(command_t* command, node_t* root)
 
 
 
-    if(fs_is_path_valid(command->name_key))
+    if(command->isPathValid)
       printf("%s\n", fs_delete(root, command->path, false) ? "ok" : "no");
     else printf("no\n");
   }
@@ -697,7 +702,7 @@ void parseCommand(command_t* command, node_t* root)
 
 
 
-    if(fs_is_path_valid(command->name_key))
+    if(command->isPathValid)
       printf("%s\n", fs_delete(root, command->path, true) ? "ok" : "no");
     else printf("no\n");
   }
@@ -782,6 +787,7 @@ void cleanupCommand(command_t* command)
     command->name_key = NULL;
     command->name_len = NULL;
     command->content_len = -1;
+    command->isPathValid = true;
     command->pathBufferSize = _INITIAL_PATH_BUFFER_SIZE_;
 }
 
@@ -795,7 +801,7 @@ int main(void)
   root.first_child = NULL;
   root.depth = 0;
   root.isDir = true;
-  root.path_len = 1;
+  root.path_len = 0;
 
   command_t command;
   command.command = NULL;
@@ -803,8 +809,9 @@ int main(void)
   command.content = NULL;
   command.count = 0;
   command.name_key = NULL;
-  command.content_len = -1;
   command.name_len = NULL;
+  command.content_len = -1;
+  command.isPathValid = true;
   command.pathBufferSize = _INITIAL_PATH_BUFFER_SIZE_;
 
   do

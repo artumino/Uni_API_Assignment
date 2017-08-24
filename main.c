@@ -15,6 +15,7 @@ typedef struct command_tag
   int* name_key;
   int* name_len;
   char* content;
+  bool isPathValid;
   int content_len;
   int pathBufferSize;
   int count;
@@ -46,6 +47,10 @@ int readCommand(command_t* command)
           command->name_key[pathLen] = currentKey;
           command->name_len[pathLen] = len;
           command->path[pathLen++] = str;
+
+          if(currentKey < 0)
+            command->isPathValid = false;
+
           if(pathLen >= command->pathBufferSize)
           {
             debug_print("Resize buffer path da %d a %d\n", command->pathBufferSize, command->pathBufferSize * 2);
@@ -89,6 +94,10 @@ int readCommand(command_t* command)
         command->name_key[pathLen] = currentKey;
         command->name_len[pathLen] = len;
         command->path[pathLen++] = str;
+
+        if(currentKey < 0)
+          command->isPathValid = false;
+
         debug_print("Got path parameter with name %s\n", command->path[pathLen - 1]);
         if(pathLen >= command->pathBufferSize)
         {
@@ -129,6 +138,10 @@ int readCommand(command_t* command)
       command->name_key[pathLen] = currentKey;
       command->name_len[pathLen] = len;
       command->path[pathLen++] = str;
+
+      if(currentKey < 0)
+        command->isPathValid = false;
+
       if(pathLen >= command->pathBufferSize)
       {
         debug_print("Resize buffer path da %d a %d\n", command->pathBufferSize, command->pathBufferSize + 1);
@@ -169,7 +182,7 @@ void parseCommand(command_t* command, node_t* root)
     debug_print("[DEBUG] Creazione file iniziata...\n");
 
 
-    if(fs_is_path_valid(command->name_key))
+    if(command->isPathValid)
       printf("%s\n", fs_create(root, command->path, command->name_key, command->name_len, false) ? "ok" : "no");
     else
       printf("no\n");
@@ -187,7 +200,7 @@ void parseCommand(command_t* command, node_t* root)
 
     debug_print("[DEBUG] Creazione directory iniziata...\n");
 
-    if(fs_is_path_valid(command->name_key))
+    if(command->isPathValid)
       printf("%s\n", fs_create(root, command->path, command->name_key, command->name_len, true) ? "ok" : "no");
     else
       printf("no\n");
@@ -205,7 +218,7 @@ void parseCommand(command_t* command, node_t* root)
 
     debug_print("[DEBUG] Scrittura file iniziata...\n");
 
-    if(fs_is_path_valid(command->name_key))
+    if(command->isPathValid)
     {
       if(command->content_len < 2 || command->content[0] != '"' || command->content[command->content_len - 1] != '"')
       {
@@ -247,7 +260,7 @@ void parseCommand(command_t* command, node_t* root)
 
     debug_print("[DEBUG] Lettura file iniziata...\n");
 
-    if(fs_is_path_valid(command->name_key))
+    if(command->isPathValid)
     {
       char* result = fs_read(root, command->path);
       if(result != NULL)
@@ -271,7 +284,7 @@ void parseCommand(command_t* command, node_t* root)
     debug_print("[DEBUG] Rimozione percorso iniziata...\n");
 
 
-    if(fs_is_path_valid(command->name_key))
+    if(command->isPathValid)
       printf("%s\n", fs_delete(root, command->path, false) ? "ok" : "no");
     else printf("no\n");
   }
@@ -289,7 +302,7 @@ void parseCommand(command_t* command, node_t* root)
     debug_print("[DEBUG] Rimozione ricorsiva percorso iniziata...\n");
 
 
-    if(fs_is_path_valid(command->name_key))
+    if(command->isPathValid)
       printf("%s\n", fs_delete(root, command->path, true) ? "ok" : "no");
     else printf("no\n");
   }
@@ -357,6 +370,7 @@ void cleanupCommand(command_t* command)
           free(command->path[j]);
           j++;
         }
+        free(command->path);
       }
 
       if(badExecution)
@@ -376,6 +390,7 @@ void cleanupCommand(command_t* command)
     command->name_key = NULL;
     command->name_len = NULL;
     command->content_len = -1;
+    command->isPathValid = true;
     command->pathBufferSize = _INITIAL_PATH_BUFFER_SIZE_;
 }
 
@@ -389,7 +404,7 @@ int main(void)
   root.first_child = NULL;
   root.depth = 0;
   root.isDir = true;
-  root.path_len = 1;
+  root.path_len = 0;
 
   command_t command;
   command.command = NULL;
@@ -397,9 +412,10 @@ int main(void)
   command.content = NULL;
   command.count = 0;
   command.name_key = NULL;
-  command.content_len = -1;
-  command.pathBufferSize = _INITIAL_PATH_BUFFER_SIZE_;
   command.name_len = NULL;
+  command.content_len = -1;
+  command.isPathValid = true;
+  command.pathBufferSize = _INITIAL_PATH_BUFFER_SIZE_;
 
   do
   {

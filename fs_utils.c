@@ -57,8 +57,8 @@ bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
     //Alloco lo spazio per le stringhe
     node->name = (char*)malloc(lenName * sizeof(char));
     node->path = (char*)malloc(lenPath * sizeof(char));
-    memset(node->name, 0, lenName * sizeof(char));
-    memset(node->path, 0, lenPath * sizeof(char));
+    //memset(node->name, 0, lenName * sizeof(char));
+    //memset(node->path, 0, lenPath * sizeof(char));
 
     if(!isDir)
     {
@@ -69,16 +69,22 @@ bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
       *(node->content) = '\0';
     }
 
-    node->name = strcpy(node->name, *path);
+    //node->name = strcpy(node->name, *path);
+    memcpy(node->name, *path, lenName * sizeof(char));
     debug_print("[DEBUG] Nome nodo impostato a %s\n", node->name);
-    if(root->path != NULL)
+    if(root->path_len > 0)
     {
-      node->path = strcpy(node->path, root->path);
-      strcat(node->path, "/");
+      //node->path = strcpy(node->path, root->path);
+      memcpy(node->path, root->path, root->path_len * sizeof(char));
+      node->path[root->path_len] = '/';
+      //strcat(node->path, "/");
     }
     else
-      strcpy(node->path, "/");
-    strcat(node->path, *path);
+      node->path[0] = '/';
+      //strcpy(node->path, "/");
+
+    memcpy(node->path + root->path_len + 1, *path, lenName);
+    //strcat(node->path, *path);
     debug_print("[DEBUG] Path nodo impostato a %s\n", node->path);
 
     debug_print("[DEBUG] Inserisco il nodo nella hash table del livello...\n");
@@ -325,20 +331,6 @@ int fs_partial_key(int currentKey, int currentLen, char c)
   else
     return _FS_KEY_WRONG_CHARS_; //Caratteri inaspettati nel name
   return (currentKey < 0 ? 0 : currentKey) + ((int)c + (currentLen * _MAX_CHAR_COMBINATIONS_));
-}
-
-//Controlla se il percorso è formato correttamente
-bool fs_is_path_valid(int keys[])
-{
-  int i = 0;
-
-  if(keys == NULL)
-    return false;
-
-  while(keys[i] != _FS_KEY_END_)
-    if(keys[i++] < 0)
-      return false;
-  return true;
 }
 
 //Metodo comodo per eseguire il calcolo della lunghezza rispetto alla key

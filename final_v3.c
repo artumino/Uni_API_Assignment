@@ -20,6 +20,8 @@
 #define _FS_KEY_WRONG_CHARS_ -2
 #define _FS_KEY_EMPTY_ -1
 
+#define _INITIAL_PATH_BUFFER_SIZE_ 256
+
 typedef struct node_tag
 {
   //Accesso come lista (Struttura ad Albero)
@@ -779,7 +781,7 @@ void cleanupCommand(command_t* command)
     command->name_key = NULL;
     command->name_len = NULL;
     command->content_len = -1;
-    command->pathBufferSize = 1;
+    command->pathBufferSize = _INITIAL_PATH_BUFFER_SIZE_;
 }
 
 int main(void)
@@ -802,7 +804,7 @@ int main(void)
   command.name_key = NULL;
   command.content_len = -1;
   command.name_len = NULL;
-  command.pathBufferSize = 1;
+  command.pathBufferSize = _INITIAL_PATH_BUFFER_SIZE_;
 
   do
   {

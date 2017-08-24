@@ -6,6 +6,8 @@
 #include "debug.h"
 #include "fs_utils.h"
 
+#define _INITIAL_PATH_BUFFER_SIZE_ 256
+
 typedef struct command_tag
 {
   char* command;
@@ -374,7 +376,7 @@ void cleanupCommand(command_t* command)
     command->name_key = NULL;
     command->name_len = NULL;
     command->content_len = -1;
-    command->pathBufferSize = 1;
+    command->pathBufferSize = _INITIAL_PATH_BUFFER_SIZE_;
 }
 
 int main(void)
@@ -396,7 +398,7 @@ int main(void)
   command.count = 0;
   command.name_key = NULL;
   command.content_len = -1;
-  command.pathBufferSize = 1;
+  command.pathBufferSize = _INITIAL_PATH_BUFFER_SIZE_;
   command.name_len = NULL;
 
   do

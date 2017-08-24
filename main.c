@@ -14,6 +14,7 @@ typedef struct command_tag
   int* name_len;
   char* content;
   int content_len;
+  int pathBufferSize;
   int count;
 } command_t;
 
@@ -43,9 +44,14 @@ int readCommand(command_t* command)
           command->name_key[pathLen] = currentKey;
           command->name_len[pathLen] = len;
           command->path[pathLen++] = str;
-          command->path = (char**)realloc(command->path, (pathLen + 1) * sizeof(char*));
-          command->name_key = (int*)realloc(command->name_key, (pathLen + 1) * sizeof(int));
-          command->name_len = (int*)realloc(command->name_len, (pathLen + 1) * sizeof(int));
+          if(pathLen >= command->pathBufferSize)
+          {
+            debug_print("Resize buffer path da %d a %d\n", command->pathBufferSize, command->pathBufferSize * 2);
+            command->pathBufferSize *= 2;
+            command->path = (char**)realloc(command->path, command->pathBufferSize * sizeof(char*));
+            command->name_key = (int*)realloc(command->name_key, command->pathBufferSize * sizeof(int));
+            command->name_len = (int*)realloc(command->name_len, command->pathBufferSize * sizeof(int));
+          }
           str = (char*)malloc(sizeof(char));
           len = 0;
           currentKey = _FS_KEY_EMPTY_;
@@ -72,9 +78,9 @@ int readCommand(command_t* command)
       if(clen == 0)
       {
         command->command = str;
-        command->path = (char**)malloc(sizeof(char*));
-        command->name_key = (int*)malloc(sizeof(int));
-        command->name_len = (int*)malloc(sizeof(int));
+        command->path = (char**)malloc(command->pathBufferSize * sizeof(char*));
+        command->name_key = (int*)malloc(command->pathBufferSize * sizeof(int));
+        command->name_len = (int*)malloc(command->pathBufferSize * sizeof(int));
       }
       else if(clen == 1)
       {
@@ -82,9 +88,14 @@ int readCommand(command_t* command)
         command->name_len[pathLen] = len;
         command->path[pathLen++] = str;
         debug_print("Got path parameter with name %s\n", command->path[pathLen - 1]);
-        command->path = (char**)realloc(command->path, (pathLen + 1) * sizeof(char*));
-        command->name_key = (int*)realloc(command->name_key, (pathLen + 1) * sizeof(int));
-        command->name_len = (int*)realloc(command->name_len, (pathLen + 1) * sizeof(int));
+        if(pathLen >= command->pathBufferSize)
+        {
+          debug_print("Resize buffer path da %d a %d\n", command->pathBufferSize, command->pathBufferSize * 2);
+          command->pathBufferSize += 1;
+          command->path = (char**)realloc(command->path, command->pathBufferSize * sizeof(char*));
+          command->name_key = (int*)realloc(command->name_key, command->pathBufferSize * sizeof(int));
+          command->name_len = (int*)realloc(command->name_len, command->pathBufferSize * sizeof(int));
+        }
         command->path[pathLen] = NULL;
         command->name_key[pathLen] = _FS_KEY_END_;
         command->name_len[pathLen] = 0;
@@ -116,9 +127,14 @@ int readCommand(command_t* command)
       command->name_key[pathLen] = currentKey;
       command->name_len[pathLen] = len;
       command->path[pathLen++] = str;
-      command->path = (char**)realloc(command->path, (pathLen + 1) * sizeof(char*));
-      command->name_key = (int*)realloc(command->name_key, (pathLen + 1) * sizeof(int));
-      command->name_len = (int*)realloc(command->name_len, (pathLen + 1) * sizeof(int));
+      if(pathLen >= command->pathBufferSize)
+      {
+        debug_print("Resize buffer path da %d a %d\n", command->pathBufferSize, command->pathBufferSize + 1);
+        command->pathBufferSize += 1;
+        command->path = (char**)realloc(command->path, command->pathBufferSize * sizeof(char*));
+        command->name_key = (int*)realloc(command->name_key, command->pathBufferSize * sizeof(int));
+        command->name_len = (int*)realloc(command->name_len, command->pathBufferSize * sizeof(int));
+      }
       command->path[pathLen] = NULL;
       command->name_key[pathLen] = _FS_KEY_END_;
       command->name_len[pathLen] = 0;
@@ -358,6 +374,7 @@ void cleanupCommand(command_t* command)
     command->name_key = NULL;
     command->name_len = NULL;
     command->content_len = -1;
+    command->pathBufferSize = 1;
 }
 
 int main(void)
@@ -379,6 +396,7 @@ int main(void)
   command.count = 0;
   command.name_key = NULL;
   command.content_len = -1;
+  command.pathBufferSize = 1;
   command.name_len = NULL;
 
   do

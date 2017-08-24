@@ -11,6 +11,7 @@ typedef struct command_tag
   char* command;
   char** path;
   int* name_key;
+  int* name_len;
   char* content;
   int content_len;
   int count;
@@ -40,9 +41,11 @@ int readCommand(command_t* command)
           debug_print("/");
           str[len] = '\0';
           command->name_key[pathLen] = currentKey;
+          command->name_len[pathLen] = len;
           command->path[pathLen++] = str;
           command->path = (char**)realloc(command->path, (pathLen + 1) * sizeof(char*));
           command->name_key = (int*)realloc(command->name_key, (pathLen + 1) * sizeof(int));
+          command->name_len = (int*)realloc(command->name_len, (pathLen + 1) * sizeof(int));
           str = (char*)malloc(sizeof(char));
           len = 0;
           currentKey = _FS_KEY_EMPTY_;
@@ -71,16 +74,20 @@ int readCommand(command_t* command)
         command->command = str;
         command->path = (char**)malloc(sizeof(char*));
         command->name_key = (int*)malloc(sizeof(int));
+        command->name_len = (int*)malloc(sizeof(int));
       }
       else if(clen == 1)
       {
         command->name_key[pathLen] = currentKey;
+        command->name_len[pathLen] = len;
         command->path[pathLen++] = str;
         debug_print("Got path parameter with name %s\n", command->path[pathLen - 1]);
         command->path = (char**)realloc(command->path, (pathLen + 1) * sizeof(char*));
         command->name_key = (int*)realloc(command->name_key, (pathLen + 1) * sizeof(int));
+        command->name_len = (int*)realloc(command->name_len, (pathLen + 1) * sizeof(int));
         command->path[pathLen] = NULL;
         command->name_key[pathLen] = _FS_KEY_END_;
+        command->name_len[pathLen] = 0;
       }
       else
       {
@@ -107,11 +114,14 @@ int readCommand(command_t* command)
     {
       debug_print("Salvata path con parametri: nome %s e key %d\n", str, currentKey);
       command->name_key[pathLen] = currentKey;
+      command->name_len[pathLen] = len;
       command->path[pathLen++] = str;
       command->path = (char**)realloc(command->path, (pathLen + 1) * sizeof(char*));
       command->name_key = (int*)realloc(command->name_key, (pathLen + 1) * sizeof(int));
+      command->name_len = (int*)realloc(command->name_len, (pathLen + 1) * sizeof(int));
       command->path[pathLen] = NULL;
       command->name_key[pathLen] = _FS_KEY_END_;
+      command->name_len[pathLen] = 0;
     }
     else
     {
@@ -133,6 +143,7 @@ void parseCommand(command_t* command, node_t* root)
   {
     if(command->count != 2)
     {
+      badExecution = true;
       printf("no\n");
       return;
     }
@@ -141,7 +152,7 @@ void parseCommand(command_t* command, node_t* root)
 
 
     if(fs_is_path_valid(command->name_key))
-      printf("%s\n", fs_create(root, command->path, false) ? "ok" : "no");
+      printf("%s\n", fs_create(root, command->path, command->name_key, command->name_len, false) ? "ok" : "no");
     else
       printf("no\n");
   }
@@ -159,7 +170,7 @@ void parseCommand(command_t* command, node_t* root)
     debug_print("[DEBUG] Creazione directory iniziata...\n");
 
     if(fs_is_path_valid(command->name_key))
-      printf("%s\n", fs_create(root, command->path, true) ? "ok" : "no");
+      printf("%s\n", fs_create(root, command->path, command->name_key, command->name_len, true) ? "ok" : "no");
     else
       printf("no\n");
   }
@@ -188,7 +199,7 @@ void parseCommand(command_t* command, node_t* root)
         command->content += 1;
         command->content[command->content_len - 2] = 0;
         command->content_len -= 2;
-        int result = fs_write(root, command->path, command->content);
+        int result = fs_write(root, command->path, command->content, command->content_len);
         if(result > 0)
           printf("ok %d\n", result);
         else
@@ -211,6 +222,7 @@ void parseCommand(command_t* command, node_t* root)
   {
     if(command->count != 2)
     {
+      badExecution = true;
       printf("no\n");
       return;
     }
@@ -233,6 +245,7 @@ void parseCommand(command_t* command, node_t* root)
   {
     if(command->count != 2)
     {
+      badExecution = true;
       printf("no\n");
       return;
     }
@@ -250,6 +263,7 @@ void parseCommand(command_t* command, node_t* root)
   {
     if(command->count != 2)
     {
+      badExecution = true;
       printf("no\n");
       return;
     }
@@ -267,6 +281,7 @@ void parseCommand(command_t* command, node_t* root)
   {
     if(command->count != 2)
     {
+      badExecution = true;
       printf("no\n");
       return;
     }
@@ -313,7 +328,8 @@ void cleanupCommand(command_t* command)
     if(command->command != NULL)
     {
       free(command->command);
-
+      free(command->name_key);
+      free(command->name_len);
       //Libero il contentuto del percorso
       if(command->path != NULL)
       {
@@ -340,6 +356,7 @@ void cleanupCommand(command_t* command)
     command->content = NULL;
     command->count = 0;
     command->name_key = NULL;
+    command->name_len = NULL;
     command->content_len = -1;
 }
 
@@ -353,6 +370,7 @@ int main(void)
   root.first_child = NULL;
   root.depth = 0;
   root.isDir = true;
+  root.path_len = 1;
 
   command_t command;
   command.command = NULL;
@@ -361,6 +379,7 @@ int main(void)
   command.count = 0;
   command.name_key = NULL;
   command.content_len = -1;
+  command.name_len = NULL;
 
   do
   {

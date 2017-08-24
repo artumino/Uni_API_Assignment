@@ -24,7 +24,7 @@ int main(void)
   int key;
   for(i = 0; i < MAX_CHARS; i++)
   {
-    total = fs_partial_key(total, i, 'Z');//+= (CHAR_COMBINATIONS - 1) + (CHAR_COMBINATIONS * i);
+    total += (CHAR_COMBINATIONS - 1) + (CHAR_COMBINATIONS * i);
   }
   printf("%d\n", total);
   const char pconst[] = "/a/dsadasdsa/fsadasdas/fsadasdsa";

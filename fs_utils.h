@@ -37,14 +37,15 @@ typedef struct node_tag
   int depth;
   char* name;
   char* path; //Utile per riordinare
+  int path_len;
   char* content;
 } node_t;
 
 //Interfaccia per i comandi da console
 char** fs_parse_path(char* path);
-bool fs_create(node_t* root, char** path, bool isDir);
+bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir);
 char* fs_read(node_t* root, char** path);
-int fs_write(node_t* root, char** path, char* contenuto);
+int fs_write(node_t* root, char** path, char* content, int contentLen);
 bool fs_delete(node_t* root, char** path, bool recursive);
 node_t** fs_find(node_t* root, char* name, int key, node_t** items, int* count); //NULL come ultimo elemento
 

@@ -46,7 +46,7 @@ char** fs_parse_path(char* path)
   return path_arr;
 }
 
-bool fs_create(node_t* root, char** path, bool isDir)
+bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
 {
   if(root->depth + 1 > _FS_MAX_DEPTH_)
   {
@@ -56,12 +56,11 @@ bool fs_create(node_t* root, char** path, bool isDir)
   if(*path == NULL)
     return false; //_FS_FILE_ALREADY_EXISTS_ Esiste già il file/dir che volevo creare
 
-  int key = fs_key(*path);
-  if(key < 0)
+  if(*key < 0)
     return false;
-  int hash = fs_hash(key, _FS_HASH_BUCKETS_);
+  int hash = fs_hash(*key, _FS_HASH_BUCKETS_);
 
-  debug_print("[DEBUG] Calcolato key per %s = %d\n", *path, key);
+  debug_print("[DEBUG] Calcolato key per %s = %d\n", *path, *key);
 
   //Sono all'ultimo nodo, devo inserire l'elemento se non già esistente
   if(*(path + 1) == NULL ) //Investigare sul secondo check
@@ -87,10 +86,11 @@ bool fs_create(node_t* root, char** path, bool isDir)
     node->content = NULL;
     //node->rb_color = BLACK;
     node->depth = root->depth + 1;
-    node->key = key;
+    node->key = *key;
 
-    int lenName = strlen(*path) + 1;
-    int lenPath = (lenName + (root->path != NULL ? strlen(root->path) : 0) + 1);
+    int lenName = *len + 1;
+    int lenPath = root->path_len + lenName + 1;
+    node->path_len = lenPath - 1;
     debug_print("[DEBUG] Parametri di base impostati, scrivo i contenuti delle stringhe di dimensione: %d - %d...\n", (int)(lenName * sizeof(char)), (int)(lenPath * sizeof(char)));
 
     //Alloco lo spazio per le stringhe
@@ -102,7 +102,9 @@ bool fs_create(node_t* root, char** path, bool isDir)
     if(!isDir)
     {
       debug_print("[DEBUG] Creo contenuto per file vuoti\n");
-      node->content = (char*)malloc(sizeof(char));
+      node->content = (char*)malloc(2*sizeof(char));
+      *(node->content) = '\0';
+      node->content++;
       *(node->content) = '\0';
     }
 
@@ -130,7 +132,7 @@ bool fs_create(node_t* root, char** path, bool isDir)
     //Cerco se esiste un elemento con lo stesso nome
     debug_print("[DEBUG] Cerco se l'elemento è un doppione\n");
     node_t* hash_spot = root->hash_table[hash];
-    while(hash_spot != NULL && (hash_spot->key != key || strcmp(hash_spot->name, *path))) //Scorro le collisioni (Effettuo la comparazione carattere per carattere solo se ho le stesse chiavi)
+    while(hash_spot != NULL && (hash_spot->key != *key || strcmp(hash_spot->name, *path))) //Scorro le collisioni (Effettuo la comparazione carattere per carattere solo se ho le stesse chiavi)
       hash_spot = hash_spot->hash_next;
 
     if(hash_spot != NULL)
@@ -163,23 +165,29 @@ bool fs_create(node_t* root, char** path, bool isDir)
     return false;
 
   debug_print("[DEBUG] Procedo al prossimo nodo\n");
-  return fs_create(next, path + 1, isDir);
+  return fs_create(next, path + 1, key + 1, len + 1, isDir);
 }
 
 //Metodo per scrivere nei file
-int fs_write(node_t* root, char** path, char* content)
+int fs_write(node_t* root, char** path, char* content, int contentLen)
 {
   if(*path == NULL && !root->isDir)
   {
     debug_print("[DEBUG] Ultimo nodo, controllo se devo liberare il vecchio contenuto\n");
     //L'elemento è stato trovato, si trova in root
     if(root->content != NULL)
-      free(root->content);
+      free(root->content - 1);
 
-    int contentLen = strlen(content);
     debug_print("[DEBUG] Scrivo %d byte di nuovo contenuto\n", (int)((contentLen + 1) * sizeof(char)));
-    root->content = (char*)malloc((contentLen + 1) * sizeof(char));
-    strcpy(root->content, content);
+    root->content = contentLen > 0 ? content : (char*)malloc(2*sizeof(char));
+
+    if(contentLen == 0)
+    {
+      root->content[0] = '\0';
+      root->content[1] = '\0';
+      root->content++;
+    }
+
     return contentLen; //Effettuo la scrittura
   }
   else if(path == NULL)
@@ -192,7 +200,7 @@ int fs_write(node_t* root, char** path, char* content)
     return -1;
 
   debug_print("[DEBUG] Procedo al prossimo nodo\n");
-  return fs_write(next, path + 1, content);
+  return fs_write(next, path + 1, content, contentLen);
 }
 
 char* fs_read(node_t* root, char** path)
@@ -246,7 +254,7 @@ bool fs_delete(node_t* root, char** path, bool recursive)
       root->list_next->list_prev = root->list_prev;
 
     root->fs_parent->childs--;
-    if(root->content != NULL)
+    if(root->content-- != NULL)
       free(root->content);
     if(root->path != NULL)
       free(root->path);

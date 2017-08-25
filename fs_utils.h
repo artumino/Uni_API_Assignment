@@ -43,9 +43,9 @@ typedef struct node_tag
 
 //Interfaccia per i comandi da console
 bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir);
-char* fs_read(node_t* root, char** path);
-int fs_write(node_t* root, char** path, char* content, int contentLen);
-bool fs_delete(node_t* root, char** path, bool recursive);
+char* fs_read(node_t* root, char** path, int* key);
+int fs_write(node_t* root, char** path, int* key, char* content, int contentLen);
+bool fs_delete(node_t* root, char** path, int* key, bool recursive);
 node_t** fs_find(node_t* root, char* name, int key, node_t** items, int* count); //NULL come ultimo elemento
 
 //Metodi utility
@@ -55,7 +55,7 @@ int fs_key_length(int key);
 int fs_hash(int key, int buckets);
 
 //Metodi hash
-node_t* fs_hash_next_node(node_t* root, char* name);
+node_t* fs_hash_next_node(node_t* root, char* name, int* key);
 
 //Sort
 void fs_mergesort(node_t** items, int left, int right);

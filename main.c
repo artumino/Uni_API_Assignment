@@ -230,7 +230,7 @@ void parseCommand(command_t* command, node_t* root)
         command->content += 1;
         command->content[command->content_len - 2] = 0;
         command->content_len -= 2;
-        int result = fs_write(root, command->path, command->content, command->content_len);
+        int result = fs_write(root, command->path, command->name_key, command->content, command->content_len);
         if(result > 0)
           printf("ok %d\n", result);
         else
@@ -262,7 +262,7 @@ void parseCommand(command_t* command, node_t* root)
 
     if(command->isPathValid)
     {
-      char* result = fs_read(root, command->path);
+      char* result = fs_read(root, command->path, command->name_key);
       if(result != NULL)
         printf("contenuto %s\n", result);
       else
@@ -285,7 +285,7 @@ void parseCommand(command_t* command, node_t* root)
 
 
     if(command->isPathValid)
-      printf("%s\n", fs_delete(root, command->path, false) ? "ok" : "no");
+      printf("%s\n", fs_delete(root, command->path, command->name_key, false) ? "ok" : "no");
     else printf("no\n");
   }
 
@@ -303,7 +303,7 @@ void parseCommand(command_t* command, node_t* root)
 
 
     if(command->isPathValid)
-      printf("%s\n", fs_delete(root, command->path, true) ? "ok" : "no");
+      printf("%s\n", fs_delete(root, command->path, command->name_key, true) ? "ok" : "no");
     else printf("no\n");
   }
 

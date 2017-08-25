@@ -3,3 +3,8 @@
 *.0
 .vs
 final.c
+main
+test
+gmon.out
+out.txt
+prof.txt

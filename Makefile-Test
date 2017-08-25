@@ -3,7 +3,7 @@ TEST = test.c fs_utils.c local_random.c
 default: all
 
 all:
-	gcc -DEVAL -g -fno-omit-frame-pointer -gdwarf-2 -static -std=c99 -O2 $(TEST) -lm -o test
+	gcc -Wall -DEVAL -g -fno-omit-frame-pointer -gdwarf-2 -static -std=c99 -O2 $(TEST) -lm -o test
 
 run:
 	test $(ARGS)

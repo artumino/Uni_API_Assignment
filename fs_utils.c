@@ -126,7 +126,7 @@ bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
     return true;
   }
 
-  node_t* next = fs_hash_next_node(root, *path);
+  node_t* next = fs_hash_next_node(root, *path, key);
 
   if(next == NULL)
     return false;
@@ -136,7 +136,7 @@ bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
 }
 
 //Metodo per scrivere nei file
-int fs_write(node_t* root, char** path, char* content, int contentLen)
+int fs_write(node_t* root, char** path, int* key, char* content, int contentLen)
 {
   if(*path == NULL && !root->isDir)
   {
@@ -161,31 +161,31 @@ int fs_write(node_t* root, char** path, char* content, int contentLen)
     return -1;
 
   //Mi trovo in un nodo intermedio, cerco il prossimo nodo in lista
-  node_t* next = fs_hash_next_node(root, *path);
+  node_t* next = fs_hash_next_node(root, *path, key);
 
   if(next == NULL)
     return -1;
 
   debug_print("[DEBUG] Procedo al prossimo nodo\n");
-  return fs_write(next, path + 1, content, contentLen);
+  return fs_write(next, path + 1, key + 1, content, contentLen);
 }
 
-char* fs_read(node_t* root, char** path)
+char* fs_read(node_t* root, char** path, int* key)
 {
   if(*path == NULL)
     return root->content;
 
   //Mi trovo in un nodo intermedio, cerco il prossimo nodo in lista
-  node_t* next = fs_hash_next_node(root, *path);
+  node_t* next = fs_hash_next_node(root, *path, key);
 
   if(next == NULL)
     return NULL;
 
   debug_print("[DEBUG] Procedo al prossimo nodo\n");
-  return fs_read(next, path + 1);
+  return fs_read(next, path + 1, key + 1);
 }
 
-bool fs_delete(node_t* root, char** path, bool recursive)
+bool fs_delete(node_t* root, char** path, int* key, bool recursive)
 {
   if(*path == NULL)
   {
@@ -193,7 +193,7 @@ bool fs_delete(node_t* root, char** path, bool recursive)
     if(recursive)
     {
       while(root->first_child != NULL)
-        fs_delete(root->first_child, path, true);
+        fs_delete(root->first_child, path, key, true);
     }
 
     //Se ho figli, errore (se è ricorsivo sono sicuro che li ho cancellati tutti)
@@ -235,13 +235,13 @@ bool fs_delete(node_t* root, char** path, bool recursive)
   }
 
   //Mi trovo in un nodo intermedio, cerco il prossimo nodo in lista
-  node_t* next = fs_hash_next_node(root, *path);
+  node_t* next = fs_hash_next_node(root, *path, key);
 
   if(next == NULL)
     return false;
 
   debug_print("[DEBUG] Procedo al prossimo nodo\n");
-  return fs_delete(next, path + 1, recursive);
+  return fs_delete(next, path + 1, key + 1, recursive);
 }
 
 //Metodo per la ricerca di un elemento
@@ -346,21 +346,19 @@ int fs_hash(int key, int buckets)
 }
 
 //Metodo per ricercare un elemento per chiave in una tabella hash
-node_t* fs_hash_next_node(node_t* root, char* name)
+node_t* fs_hash_next_node(node_t* root, char* name, int* key)
 {
   debug_print("[DEBUG][FIND-NEXT] Controllo che ci siano figli\n");
   //Sono in un nodo intermedio, devo ricercare
   if(root->childs == 0) // Questo livello non ha più sottofigli, il percorso deve essere errato
     return NULL;
 
-  int key = fs_key(name);
-
-  if(key < 0)
+  if(*key < 0)
     return NULL;
 
   debug_print("[DEBUG] Trovo il nodo con il nome che mi serve\n");
-  node_t* next = root->hash_table[fs_hash(key, _FS_HASH_BUCKETS_)]; // = fs_bst_find_node(root->rb_root, key);
-  while(next != NULL && (next->key != key|| strcmp(next->name, name))) //Trovo il nodo che mi serve
+  node_t* next = root->hash_table[fs_hash(*key, _FS_HASH_BUCKETS_)]; // = fs_bst_find_node(root->rb_root, key);
+  while(next != NULL && (next->key != *key|| strcmp(next->name, name))) //Trovo il nodo che mi serve
     next = next->hash_next;
 
   return next;

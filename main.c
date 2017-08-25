@@ -323,7 +323,10 @@ void parseCommand(command_t* command, node_t* root)
     {
       int count = 0;
       node_t** findResults = fs_find(root, command->path[0], command->name_key[0], NULL, &count);
-      fs_mergesort(findResults, 0, count-1);
+      char** paths = (char**)malloc(count * sizeof(char*));
+      for(int i = 0; i < count; i++)
+        paths[i] = fs_calculate_path(findResults[i]);
+      fs_mergesort(paths, 0, count-1);
       debug_print("[DEBUG] Ricerca ricorsiva conclusa stampo risultati...\n");
 
       if(count > 0)
@@ -331,7 +334,7 @@ void parseCommand(command_t* command, node_t* root)
         int i = 0;
         while(findResults[i] != NULL)
         {
-          printf("ok %s\n", findResults[i]->path);
+          printf("ok %s\n", paths[i]);
           i++;
         }
       }
@@ -398,7 +401,6 @@ int main(void)
 {
   root.fs_parent = NULL;
   root.name = NULL;
-  root.path = NULL;
   root.content = NULL;
   root.childs = 0;
   root.first_child = NULL;

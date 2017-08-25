@@ -6,4 +6,4 @@ all:
 	gcc -Wall -DEVAL -DDEBUG -static -g -fno-omit-frame-pointer -gdwarf-2 -std=c99 -O2 $(PROG)  -lm -o main
 
 run:
-	main $(ARGS)
+	./main $(ARGS)

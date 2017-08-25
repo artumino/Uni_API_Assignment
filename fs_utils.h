@@ -36,8 +36,9 @@ typedef struct node_tag
   int childs;
   int depth;
   char* name;
-  char* path; //Utile per riordinare
+  //char* path; //Utile per riordinare
   int path_len;
+  int name_len;
   char* content;
 } node_t;
 
@@ -53,11 +54,12 @@ int fs_key(char* name);
 int fs_partial_key(int currentKey, int currentLen, char c);
 int fs_key_length(int key);
 int fs_hash(int key, int buckets);
+char* fs_calculate_path(node_t* node);
 
 //Metodi hash
 node_t* fs_hash_next_node(node_t* root, char* name, int* key);
 
 //Sort
-void fs_mergesort(node_t** items, int left, int right);
-void fs_merge(node_t** items, int left, int center, int right);
+void fs_mergesort(char** items, int left, int right);
+void fs_merge(char** items, int left, int center, int right);
 #endif

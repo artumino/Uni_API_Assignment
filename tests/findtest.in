@@ -1,0 +1,8 @@
+create /test
+create_dir /test0
+create_dir /test0/test
+create_dir /test0/test/test
+create_dir /test0/test0
+create_dir /test0/test0/test
+find test
+exit

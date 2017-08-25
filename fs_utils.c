@@ -50,13 +50,14 @@ bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
     node->key = *key;
 
     int lenName = *len + 1;
+    node->name_len = *len;
     int lenPath = root->path_len + lenName + 1;
     node->path_len = lenPath - 1;
     debug_print("[DEBUG] Parametri di base impostati, scrivo i contenuti delle stringhe di dimensione: %d - %d...\n", (int)(lenName * sizeof(char)), (int)(lenPath * sizeof(char)));
 
     //Alloco lo spazio per le stringhe
     node->name = (char*)malloc(lenName * sizeof(char));
-    node->path = (char*)malloc(lenPath * sizeof(char));
+    //node->path = (char*)malloc(lenPath * sizeof(char));
     //memset(node->name, 0, lenName * sizeof(char));
     //memset(node->path, 0, lenPath * sizeof(char));
 
@@ -71,7 +72,7 @@ bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
 
     //node->name = strcpy(node->name, *path);
     memcpy(node->name, *path, lenName * sizeof(char));
-    debug_print("[DEBUG] Nome nodo impostato a %s\n", node->name);
+    /*debug_print("[DEBUG] Nome nodo impostato a %s\n", node->name);
     if(root->path_len > 0)
     {
       //node->path = strcpy(node->path, root->path);
@@ -85,7 +86,7 @@ bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
 
     memcpy(node->path + root->path_len + 1, *path, lenName);
     //strcat(node->path, *path);
-    debug_print("[DEBUG] Path nodo impostato a %s\n", node->path);
+    debug_print("[DEBUG] Path nodo impostato a %s\n", node->path);*/
 
     debug_print("[DEBUG] Inserisco il nodo nella hash table del livello...\n");
     if(root->childs == 0)
@@ -223,8 +224,8 @@ bool fs_delete(node_t* root, char** path, int* key, bool recursive)
     root->fs_parent->childs--;
     if(root->content-- != NULL)
       free(root->content);
-    if(root->path != NULL)
-      free(root->path);
+    //if(root->path != NULL)
+    //  free(root->path);
     if(root->name != NULL)
       free(root->name);
     if(root->hash_table != NULL)
@@ -345,6 +346,25 @@ int fs_hash(int key, int buckets)
   return local_rand(key, buckets);
 }
 
+char* fs_calculate_path(node_t* node)
+{
+  node_t* currentNode = node;
+  debug_print("Creo path di dimensione %d per elemento %s\n", node->path_len + 1, node->name);
+  char* path = (char*)malloc((node->path_len + 1) * sizeof(char));
+  int currentIndex = node->path_len;
+  path[currentIndex--] = '\0';
+  path[currentIndex] = '!';
+  while(currentNode->fs_parent != NULL)
+  {
+    currentIndex -= (currentNode->name_len - 1);
+    memcpy(path + (currentIndex--), currentNode->name, currentNode->name_len * sizeof(char));
+    path[currentIndex--] = '/';
+    currentNode = currentNode->fs_parent;
+  }
+
+  return path;
+}
+
 //Metodo per ricercare un elemento per chiave in una tabella hash
 node_t* fs_hash_next_node(node_t* root, char* name, int* key)
 {
@@ -364,7 +384,7 @@ node_t* fs_hash_next_node(node_t* root, char* name, int* key)
   return next;
 }
 
-void fs_mergesort(node_t** items, int left, int right)
+void fs_mergesort(char** items, int left, int right)
 {
   if(left < right)
   {
@@ -375,17 +395,17 @@ void fs_mergesort(node_t** items, int left, int right)
   }
 }
 
-void fs_merge(node_t** items, int left, int center, int right)
+void fs_merge(char** items, int left, int center, int right)
 {
   int i = left;
   int j = center + 1;
   int k = 0;
-  node_t* queue[right - left - 1];
+  char* queue[right - left - 1];
 
   //Esegue il confronto
   while(i <= center && j <= right)
   {
-    if(strcmp(items[i]->path, items[j]->path) <= 0)
+    if(strcmp(items[i], items[j]) <= 0)
     {
       queue[k] = items[i];
       i++;

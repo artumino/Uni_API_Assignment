@@ -51,6 +51,9 @@ int readCommand(command_t* command)
           if(currentKey < 0)
             command->isPathValid = false;
 
+          if(pathLen >= 255) //Limite di profondità
+            command->isPathValid = false;
+
           if(pathLen >= command->pathBufferSize)
           {
             debug_print("Resize buffer path da %d a %d\n", command->pathBufferSize, command->pathBufferSize * 2);
@@ -98,6 +101,9 @@ int readCommand(command_t* command)
         if(currentKey < 0)
           command->isPathValid = false;
 
+        if(pathLen >= 255) //Limite di profondità
+          command->isPathValid = false;
+
         debug_print("Got path parameter with name %s\n", command->path[pathLen - 1]);
         if(pathLen >= command->pathBufferSize)
         {
@@ -140,6 +146,9 @@ int readCommand(command_t* command)
       command->path[pathLen++] = str;
 
       if(currentKey < 0)
+        command->isPathValid = false;
+
+      if(pathLen >= 255) //Limite di profondità
         command->isPathValid = false;
 
       if(pathLen >= command->pathBufferSize)
@@ -323,20 +332,31 @@ void parseCommand(command_t* command, node_t* root)
     {
       int count = 0;
       node_t** findResults = fs_find(root, command->path[0], command->name_key[0], NULL, &count);
-      char** paths = (char**)malloc(count * sizeof(char*));
-      for(int i = 0; i < count; i++)
-        paths[i] = fs_calculate_path(findResults[i]);
-      fs_mergesort(paths, 0, count-1);
-      debug_print("[DEBUG] Ricerca ricorsiva conclusa stampo risultati...\n");
 
       if(count > 0)
       {
         int i = 0;
+        debug_print("Trovati %d elementi\n", count);
+        char** paths = (char**)malloc(count * sizeof(char*));
         while(findResults[i] != NULL)
         {
-          printf("ok %s\n", paths[i]);
+          paths[i] = fs_calculate_path(findResults[i]);
+          debug_print("Item[%d] : %s\n", i, paths[i]);
           i++;
         }
+
+        debug_print("[DEBUG] Ricerca ricorsiva conclusa stampo risultati (%d paths)...\n", i);
+        fs_mergesort(paths, 0, i - 1);
+        debug_print("[DEBUG] Sort completato\n");
+
+        count = i;
+        for(i = 0; i < count; i++)
+        {
+          printf("ok %s\n", paths[i]);
+          free(paths[i]);
+        }
+        free(paths);
+
       }
       else
         printf("no\n");

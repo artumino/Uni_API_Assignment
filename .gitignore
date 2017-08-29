@@ -1,3 +1,4 @@
+.f*
 *.exe
 *.gch
 *.0
@@ -8,3 +9,5 @@ test
 gmon.out
 out.txt
 prof.txt
+*.in.out
+core

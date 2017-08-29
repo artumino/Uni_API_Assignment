@@ -357,10 +357,12 @@ char* fs_calculate_path(node_t* node)
   while(currentNode->fs_parent != NULL)
   {
     currentIndex -= (currentNode->name_len - 1);
+    debug_print("%d/", currentNode->name_len);
     memcpy(path + (currentIndex--), currentNode->name, currentNode->name_len * sizeof(char));
     path[currentIndex--] = '/';
     currentNode = currentNode->fs_parent;
   }
+  debug_print("\n");
 
   return path;
 }
@@ -389,6 +391,7 @@ void fs_mergesort(char** items, int left, int right)
   if(left < right)
   {
     int center = (left + right) / 2;
+    debug_print("[DEBUG][MERGE-SORT] Center: %d Left: %d Right: %d\n", center, left, right);
     fs_mergesort(items, left, center);
     fs_mergesort(items, center + 1, right);
     fs_merge(items, left, center, right);
@@ -400,8 +403,9 @@ void fs_merge(char** items, int left, int center, int right)
   int i = left;
   int j = center + 1;
   int k = 0;
-  char* queue[right - left - 1];
+  char* queue[right - left];
 
+  debug_print("[DEBUG][MERGE] Center: %d Left: %d Right: %d\n", center, left, right);
   //Esegue il confronto
   while(i <= center && j <= right)
   {

@@ -23,6 +23,7 @@ typedef struct command_tag
 
 static node_t root;
 bool badExecution = false;
+bool keepLastPath = false;
 int readCommand(command_t* command)
 {
   char* str = (char*)malloc(sizeof(char));
@@ -192,7 +193,7 @@ void parseCommand(command_t* command, node_t* root)
 
 
     if(command->isPathValid)
-      printf("%s\n", fs_create(root, command->path, command->name_key, command->name_len, false) ? "ok" : "no");
+      printf("%s\n", (keepLastPath = fs_create(root, command->path, command->name_key, command->name_len, false)) ? "ok" : "no");
     else
       printf("no\n");
   }
@@ -210,7 +211,9 @@ void parseCommand(command_t* command, node_t* root)
     debug_print("[DEBUG] Creazione directory iniziata...\n");
 
     if(command->isPathValid)
-      printf("%s\n", fs_create(root, command->path, command->name_key, command->name_len, true) ? "ok" : "no");
+    {
+      printf("%s\n", (keepLastPath = fs_create(root, command->path, command->name_key, command->name_len, true)) ? "ok" : "no");
+    }
     else
       printf("no\n");
   }
@@ -390,7 +393,10 @@ void cleanupCommand(command_t* command)
         int j = 0;
         while(command->path[j] != NULL)
         {
-          free(command->path[j]);
+          if(!keepLastPath)
+            free(command->path[j]);
+          else if(command->path[j+1] != NULL)
+            free(command->path[j]);
           j++;
         }
         free(command->path);
@@ -403,6 +409,7 @@ void cleanupCommand(command_t* command)
           free(command->content);
         badExecution = false;
       }
+      keepLastPath = false;
       debug_print("[DEBUG] Puliti sottoargomenti\n");
     }
 

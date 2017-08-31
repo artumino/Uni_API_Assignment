@@ -71,7 +71,8 @@ bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
     }
 
     //node->name = strcpy(node->name, *path);
-    memcpy(node->name, *path, lenName * sizeof(char));
+    node->name = *path;
+    //memcpy(node->name, *path, lenName * sizeof(char));
     /*debug_print("[DEBUG] Nome nodo impostato a %s\n", node->name);
     if(root->path_len > 0)
     {

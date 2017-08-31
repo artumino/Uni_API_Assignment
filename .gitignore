@@ -11,3 +11,4 @@ out.txt
 prof.txt
 *.in.out
 core
+oprofile_data

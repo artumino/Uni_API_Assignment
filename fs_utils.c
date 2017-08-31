@@ -56,7 +56,7 @@ bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
     debug_print("[DEBUG] Parametri di base impostati, scrivo i contenuti delle stringhe di dimensione: %d - %d...\n", (int)(lenName * sizeof(char)), (int)(lenPath * sizeof(char)));
 
     //Alloco lo spazio per le stringhe
-    node->name = (char*)malloc(lenName * sizeof(char));
+    //node->name = (char*)malloc(lenName * sizeof(char));
     //node->path = (char*)malloc(lenPath * sizeof(char));
     //memset(node->name, 0, lenName * sizeof(char));
     //memset(node->path, 0, lenPath * sizeof(char));

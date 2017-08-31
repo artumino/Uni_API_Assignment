@@ -211,9 +211,7 @@ void parseCommand(command_t* command, node_t* root)
     debug_print("[DEBUG] Creazione directory iniziata...\n");
 
     if(command->isPathValid)
-    {
       printf("%s\n", (keepLastPath = fs_create(root, command->path, command->name_key, command->name_len, true)) ? "ok" : "no");
-    }
     else
       printf("no\n");
   }

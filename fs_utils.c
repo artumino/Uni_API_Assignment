@@ -21,7 +21,7 @@ bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
 
     if(*key < 0)
       return false;
-    int hash = fs_hash(*key, _FS_HASH_BUCKETS_);
+    int hash = *key % _FS_HASH_BUCKETS_;
 
     debug_print("[DEBUG] Calcolato key per %s = %d\n", *path, *key);
 
@@ -201,7 +201,7 @@ bool fs_delete(node_t* root, char** path, int* key, bool recursive)
 
       //Sistemo la tabella hash
       if(root->hash_prev == NULL) //Sono la prima entry della tabella hash
-        root->fs_parent->hash_table[fs_hash(root->key, _FS_HASH_BUCKETS_)] = root->hash_next;
+        root->fs_parent->hash_table[root->key % _FS_HASH_BUCKETS_] = root->hash_next;
 
       if(root->hash_prev != NULL)
         root->hash_prev->hash_next = root->hash_next;
@@ -343,10 +343,10 @@ int fs_key_length(int key)
 }
 
 //Metodo per calcolare un'hash
-int fs_hash(int key, int buckets)
+/*int fs_hash(int key, int buckets)
 {
   return local_rand(key, buckets);
-}
+}*/
 
 char* fs_calculate_path(node_t* node)
 {
@@ -381,7 +381,7 @@ node_t* fs_hash_next_node(node_t* root, char* name, int* key)
     return NULL;
 
   debug_print("[DEBUG] Trovo il nodo con il nome che mi serve\n");
-  node_t* next = root->hash_table[fs_hash(*key, _FS_HASH_BUCKETS_)]; // = fs_bst_find_node(root->rb_root, key);
+  node_t* next = root->hash_table[*key % _FS_HASH_BUCKETS_]; // = fs_bst_find_node(root->rb_root, key);
   while(next != NULL && (next->key != *key|| strcmp(next->name, name))) //Trovo il nodo che mi serve
     next = next->hash_next;
 

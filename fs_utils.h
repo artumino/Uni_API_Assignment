@@ -53,7 +53,7 @@ node_t** fs_find(node_t* root, char* name, int key, node_t** items, int* count);
 int fs_key(char* name);
 int fs_partial_key(int currentKey, int currentLen, char c);
 int fs_key_length(int key);
-int fs_hash(int key, int buckets);
+//int fs_hash(int key, int buckets);
 char* fs_calculate_path(node_t* node);
 
 //Metodi hash

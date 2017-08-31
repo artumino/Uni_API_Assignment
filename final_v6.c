@@ -262,9 +262,7 @@ bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
       }
 
       //Cerco se esiste un elemento con lo stesso nome
-      node_t* hash_spot = root->hash_table[hash];
-      while(hash_spot != NULL && (hash_spot->key != *key || strcmp(hash_spot->name, *path))) //Scorro le collisioni (Effettuo la comparazione carattere per carattere solo se ho le stesse chiavi)
-        hash_spot = hash_spot->hash_next;
+      node_t* hash_spot = fs_hash_next_node(root, *path, key);
 
       if(hash_spot != NULL)
         return false; //Elemento già esistente

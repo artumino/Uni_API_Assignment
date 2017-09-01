@@ -351,7 +351,6 @@ void parseCommand(command_t* command, node_t* root)
   else if(!strcmp(command->command, "exit"))
   {
     //DO NOTHING
-    printf("Cleanup Time %fs\nRead Time %fs\nExecution Time %f\n", cleanupTime, readTime, executionTime);
   }
   else
   {

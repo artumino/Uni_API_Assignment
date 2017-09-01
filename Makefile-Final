@@ -1,4 +1,4 @@
-PROG = final_v6.c
+PROG = final_v7.c
 
 default: all
 

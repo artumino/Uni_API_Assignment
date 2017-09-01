@@ -6,7 +6,7 @@
 #include "debug.h"
 #include "fs_utils.h"
 
-#define _INITIAL_NAME_BUFFER_SIZE_ 64
+#define _INITIAL_NAME_BUFFER_SIZE_ 16
 #define _INITIAL_COMMAND_BUFFER_SIZE_ 8
 
 typedef struct command_tag

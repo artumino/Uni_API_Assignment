@@ -4,7 +4,7 @@
 #include <math.h>
 #include <string.h>
 
-#define _INITIAL_NAME_BUFFER_SIZE_ 64
+#define _INITIAL_NAME_BUFFER_SIZE_ 16
 #define _INITIAL_COMMAND_BUFFER_SIZE_ 8
 
 #define _FS_MAX_DEPTH_ 255

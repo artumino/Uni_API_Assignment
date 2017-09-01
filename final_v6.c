@@ -153,7 +153,7 @@ node_t* fs_hash_next_node(node_t* root, char* name, int* key)
     return NULL;
 
   node_t* next = root->hash_table[*key % _FS_HASH_BUCKETS_]; // = fs_bst_find_node(root->rb_root, key);
-  while(next != NULL && (next->key != *key|| strcmp(next->name, name))) //Trovo il nodo che mi serve
+  while(next != NULL && (next->key != *key || strcmp(next->name, name))) //Trovo il nodo che mi serve
     next = next->hash_next;
 
   return next;
@@ -205,17 +205,11 @@ void fs_mergesort(char** items, int left, int right)
 
 bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
 {
-  while(root != NULL)
+  while(root != NULL
+    && root->depth + 1 <= _FS_MAX_DEPTH_
+    && *path != NULL
+    && *key >= 0)
   {
-    if(root->depth + 1 > _FS_MAX_DEPTH_)
-    {
-      return false; //_FS_MAX_DEPTH_REACHED_
-    }
-    if(*path == NULL)
-      return false; //_FS_FILE_ALREADY_EXISTS_ Esiste già il file/dir che volevo creare
-
-    if(*key < 0)
-      return false;
     int hash = *key % _FS_HASH_BUCKETS_;
 
     //Sono all'ultimo nodo, devo inserire l'elemento se non già esistente
@@ -246,10 +240,8 @@ bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
       node->path_len = lenPath - 1;
       if(!isDir)
       {
-        node->content = (char*)malloc(2*sizeof(char));
-        *(node->content) = '\0';
+        node->content = (char*)calloc(2, sizeof(char));
         node->content++;
-        *(node->content) = '\0';
       }
 
       node->name = *path;
@@ -257,8 +249,7 @@ bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
       if(root->childs == 0)
       {
         //Creo la tabella
-        root->hash_table = (node_t**)malloc(_FS_HASH_BUCKETS_ * sizeof(node_t*));
-        memset(root->hash_table, 0, _FS_HASH_BUCKETS_ * sizeof(node_t*));
+        root->hash_table = (node_t**)calloc(_FS_HASH_BUCKETS_, sizeof(node_t*));
       }
 
       //Cerco se esiste un elemento con lo stesso nome
@@ -301,28 +292,8 @@ bool fs_create(node_t* root, char** path, int* key, int* len, bool isDir)
 //Metodo per scrivere nei file
 int fs_write(node_t* root, char** path, int* key, char* content, int contentLen)
 {
-  while(root != NULL)
+  while(*path != NULL)
   {
-    if(*path == NULL && !root->isDir)
-    {
-      //L'elemento è stato trovato, si trova in root
-      if(root->content != NULL)
-        free(root->content - 1);
-
-      root->content = contentLen > 0 ? content : (char*)malloc(2*sizeof(char));
-
-      if(contentLen == 0)
-      {
-        root->content[0] = '\0';
-        root->content[1] = '\0';
-        root->content++;
-      }
-
-      return contentLen; //Effettuo la scrittura
-    }
-    else if(path == NULL)
-      return -1;
-
     //Mi trovo in un nodo intermedio, cerco il prossimo nodo in lista
     node_t* next = fs_hash_next_node(root, *path, key);
 
@@ -333,16 +304,29 @@ int fs_write(node_t* root, char** path, int* key, char* content, int contentLen)
     path++;
     key++;
   }
-  return -1;
+
+  //Ultimo elemento, scrivo
+  if(!root->isDir)
+  {
+    //L'elemento è stato trovato, si trova in root
+    if(root->content != NULL)
+      free(root->content - 1);
+
+    root->content = contentLen > 0 ? content : (char*)calloc(2, sizeof(char));
+
+    if(contentLen == 0)
+      root->content++;
+
+    return contentLen; //Effettuo la scrittura
+  }
+  else
+    return -1;
 }
 
 char* fs_read(node_t* root, char** path, int* key)
 {
-  while(root != NULL)
+  while(*path != NULL)
   {
-    if(*path == NULL)
-      return root->content;
-
     //Mi trovo in un nodo intermedio, cerco il prossimo nodo in lista
     node_t* next = fs_hash_next_node(root, *path, key);
 
@@ -353,60 +337,17 @@ char* fs_read(node_t* root, char** path, int* key)
     path++;
     key++;
   }
+
+  if(!root->isDir)
+    return root->content;
+
   return NULL;
 }
 
 bool fs_delete(node_t* root, char** path, int* key, bool recursive)
 {
-  while(root != NULL)
+  while(*path != NULL)
   {
-    if(*path == NULL)
-    {
-      //Mi trovo nel nodo da cancellare
-      if(recursive)
-      {
-        while(root->first_child != NULL)
-          fs_delete(root->first_child, path, key, true);
-      }
-
-      //Se ho figli, errore (se è ricorsivo sono sicuro che li ho cancellati tutti)
-      if(root->childs > 0)
-        return false;
-
-      //Sistemo la tabella hash
-      if(root->hash_prev == NULL) //Sono la prima entry della tabella hash
-        root->fs_parent->hash_table[root->key % _FS_HASH_BUCKETS_] = root->hash_next;
-
-      if(root->hash_prev != NULL)
-        root->hash_prev->hash_next = root->hash_next;
-
-      if(root->hash_next != NULL)
-        root->hash_next->hash_prev = root->hash_prev;
-
-      //Sistemo la lista dei figli ordinata
-      if(root->list_prev == NULL)
-        root->fs_parent->first_child = root->list_next;
-
-      if(root->list_prev != NULL)
-        root->list_prev->list_next = root->list_next;
-
-      if(root->list_next != NULL)
-        root->list_next->list_prev = root->list_prev;
-
-      root->fs_parent->childs--;
-      if(root->content-- != NULL)
-        free(root->content);
-      //if(root->path != NULL)
-      //  free(root->path);
-      if(root->name != NULL)
-        free(root->name);
-      if(root->hash_table != NULL)
-        free(root->hash_table);
-      free(root);
-
-      return true;
-    }
-
     //Mi trovo in un nodo intermedio, cerco il prossimo nodo in lista
     node_t* next = fs_hash_next_node(root, *path, key);
 
@@ -417,7 +358,49 @@ bool fs_delete(node_t* root, char** path, int* key, bool recursive)
     path++;
     key++;
   }
-  return false;
+
+  //Mi trovo nel nodo da cancellare
+  if(recursive)
+  {
+    while(root->first_child != NULL)
+      fs_delete(root->first_child, path, key, true);
+  }
+  //Se ho figli, errore (se è ricorsivo sono sicuro che li ho cancellati tutti)
+  else if(root->childs > 0)
+    return false;
+
+  //Sistemo la tabella hash
+  if(root->hash_prev == NULL) //Sono la prima entry della tabella hash
+    root->fs_parent->hash_table[root->key % _FS_HASH_BUCKETS_] = root->hash_next;
+
+  if(root->hash_prev != NULL)
+    root->hash_prev->hash_next = root->hash_next;
+
+  if(root->hash_next != NULL)
+    root->hash_next->hash_prev = root->hash_prev;
+
+  //Sistemo la lista dei figli ordinata
+  if(root->list_prev == NULL)
+    root->fs_parent->first_child = root->list_next;
+
+  if(root->list_prev != NULL)
+    root->list_prev->list_next = root->list_next;
+
+  if(root->list_next != NULL)
+    root->list_next->list_prev = root->list_prev;
+
+  root->fs_parent->childs--;
+  if(root->content-- != NULL)
+    free(root->content);
+  //if(root->path != NULL)
+  //  free(root->path);
+  if(root->name != NULL)
+    free(root->name);
+  if(root->hash_table != NULL)
+    free(root->hash_table);
+  free(root);
+
+  return true;
 }
 
 //Metodo per la ricerca di un elemento
@@ -462,7 +445,7 @@ int readCommand(command_t* command)
   int clen = 0;
   int currentKey = _FS_KEY_EMPTY_;
 
-  while((c = getchar()) != '\n' && c != EOF)
+  while((c = getc(stdin)) != '\n' && c != EOF)
   {
     //Se non ho uno spazio tra caratteri leggo la stringa
     if(c != ' ' || clen >= 2)

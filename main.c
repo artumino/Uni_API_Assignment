@@ -6,18 +6,19 @@
 #include "debug.h"
 #include "fs_utils.h"
 
-#define _INITIAL_PATH_BUFFER_SIZE_ 256
+#define _INITIAL_NAME_BUFFER_SIZE_ 64
+#define _INITIAL_COMMAND_BUFFER_SIZE_ 8
 
 typedef struct command_tag
 {
   char* command;
-  char** path;
-  int* name_key;
-  int* name_len;
+  char* path[256];
+  int name_key[256];
+  int name_len[256];
   char* content;
   bool isPathValid;
   int content_len;
-  int pathBufferSize;
+  int pathLen;
   int count;
 } command_t;
 
@@ -26,14 +27,15 @@ bool badExecution = false;
 bool keepLastPath = false;
 int readCommand(command_t* command)
 {
-  char* str = (char*)malloc(sizeof(char));
+  char* str = (char*)malloc(_INITIAL_COMMAND_BUFFER_SIZE_ * sizeof(char));
   int c;
   int len = 0;
-  int pathLen = 0;
+  command->pathLen = 0;
   int clen = 0;
   int currentKey = _FS_KEY_EMPTY_;
+  int BufferSize = _INITIAL_COMMAND_BUFFER_SIZE_;
 
-  while((c = getchar()) != '\n' && c != EOF)
+  while((c = getc(stdin)) != '\n' && c != EOF)
   {
     //Se non ho uno spazio tra caratteri leggo la stringa
     if(c != ' ' || clen >= 2)
@@ -45,25 +47,17 @@ int readCommand(command_t* command)
         {
           debug_print("/");
           str[len] = '\0';
-          command->name_key[pathLen] = currentKey;
-          command->name_len[pathLen] = len;
-          command->path[pathLen++] = str;
+          command->name_key[command->pathLen] = currentKey;
+          command->name_len[command->pathLen] = len;
+          command->path[command->pathLen++] = str;
 
           if(currentKey < 0)
             command->isPathValid = false;
 
-          if(pathLen >= 255) //Limite di profondità
+          if(command->pathLen >= 255) //Limite di profondità
             command->isPathValid = false;
 
-          if(pathLen >= command->pathBufferSize)
-          {
-            debug_print("Resize buffer path da %d a %d\n", command->pathBufferSize, command->pathBufferSize * 2);
-            command->pathBufferSize *= 2;
-            command->path = (char**)realloc(command->path, command->pathBufferSize * sizeof(char*));
-            command->name_key = (int*)realloc(command->name_key, command->pathBufferSize * sizeof(int));
-            command->name_len = (int*)realloc(command->name_len, command->pathBufferSize * sizeof(int));
-          }
-          str = (char*)malloc(sizeof(char));
+          str = (char*)malloc(_INITIAL_NAME_BUFFER_SIZE_ * sizeof(char));
           len = 0;
           currentKey = _FS_KEY_EMPTY_;
         }
@@ -72,14 +66,16 @@ int readCommand(command_t* command)
           debug_print("c");
           str[len++] = c;
           currentKey = fs_partial_key(currentKey, len - 1, c);
-          str = (char*)realloc(str, (len + 1) * sizeof(char));
+          if(len >= BufferSize)
+            str = (char*)realloc(str, (BufferSize = BufferSize * 2) * sizeof(char));
         }
       }
       else
       {
         debug_print("c");
         str[len++] = c;
-        str = (char*)realloc(str, (len + 1) * sizeof(char));
+        if(len >= BufferSize)
+          str = (char*)realloc(str, (BufferSize = BufferSize * 2) * sizeof(char));
       }
     }
     else if(len > 0)
@@ -89,41 +85,35 @@ int readCommand(command_t* command)
       if(clen == 0)
       {
         command->command = str;
-        command->path = (char**)malloc(command->pathBufferSize * sizeof(char*));
-        command->name_key = (int*)malloc(command->pathBufferSize * sizeof(int));
-        command->name_len = (int*)malloc(command->pathBufferSize * sizeof(int));
+        command->path[0] = NULL;
+        command->name_key[0] = _FS_KEY_EMPTY_;
+        command->name_len[0] = 0;
+        BufferSize = _INITIAL_NAME_BUFFER_SIZE_;
       }
       else if(clen == 1)
       {
-        command->name_key[pathLen] = currentKey;
-        command->name_len[pathLen] = len;
-        command->path[pathLen++] = str;
+        command->name_key[command->pathLen] = currentKey;
+        command->name_len[command->pathLen] = len;
+        command->path[command->pathLen++] = str;
 
         if(currentKey < 0)
           command->isPathValid = false;
 
-        if(pathLen >= 255) //Limite di profondità
+        if(command->pathLen >= 255) //Limite di profondità
           command->isPathValid = false;
 
-        debug_print("Got path parameter with name %s\n", command->path[pathLen - 1]);
-        if(pathLen >= command->pathBufferSize)
-        {
-          debug_print("Resize buffer path da %d a %d\n", command->pathBufferSize, command->pathBufferSize * 2);
-          command->pathBufferSize += 1;
-          command->path = (char**)realloc(command->path, command->pathBufferSize * sizeof(char*));
-          command->name_key = (int*)realloc(command->name_key, command->pathBufferSize * sizeof(int));
-          command->name_len = (int*)realloc(command->name_len, command->pathBufferSize * sizeof(int));
-        }
-        command->path[pathLen] = NULL;
-        command->name_key[pathLen] = _FS_KEY_END_;
-        command->name_len[pathLen] = 0;
+        debug_print("Got path parameter with name %s\n", command->path[command->pathLen - 1]);
+        command->path[command->pathLen] = NULL;
+        command->name_key[command->pathLen] = _FS_KEY_END_;
+        command->name_len[command->pathLen] = 0;
+        BufferSize = _INITIAL_NAME_BUFFER_SIZE_;
       }
       else
       {
         command->content = str;
         command->content_len = len;
       }
-      str = (char*)malloc(sizeof(char)); //Reinstazio una nuova stringa, pronta per il prossimo parametro
+      str = (char*)malloc(_INITIAL_NAME_BUFFER_SIZE_ * sizeof(char)); //Reinstazio una nuova stringa, pronta per il prossimo parametro
       len = 0;
       clen++;
     }
@@ -142,27 +132,19 @@ int readCommand(command_t* command)
     else if(clen == 1)
     {
       debug_print("Salvata path con parametri: nome %s e key %d\n", str, currentKey);
-      command->name_key[pathLen] = currentKey;
-      command->name_len[pathLen] = len;
-      command->path[pathLen++] = str;
+      command->name_key[command->pathLen] = currentKey;
+      command->name_len[command->pathLen] = len;
+      command->path[command->pathLen++] = str;
 
       if(currentKey < 0)
         command->isPathValid = false;
 
-      if(pathLen >= 255) //Limite di profondità
+      if(command->pathLen >= 255) //Limite di profondità
         command->isPathValid = false;
 
-      if(pathLen >= command->pathBufferSize)
-      {
-        debug_print("Resize buffer path da %d a %d\n", command->pathBufferSize, command->pathBufferSize + 1);
-        command->pathBufferSize += 1;
-        command->path = (char**)realloc(command->path, command->pathBufferSize * sizeof(char*));
-        command->name_key = (int*)realloc(command->name_key, command->pathBufferSize * sizeof(int));
-        command->name_len = (int*)realloc(command->name_len, command->pathBufferSize * sizeof(int));
-      }
-      command->path[pathLen] = NULL;
-      command->name_key[pathLen] = _FS_KEY_END_;
-      command->name_len[pathLen] = 0;
+      command->path[command->pathLen] = NULL;
+      command->name_key[command->pathLen] = _FS_KEY_END_;
+      command->name_len[command->pathLen] = 0;
     }
     else
     {
@@ -369,6 +351,7 @@ void parseCommand(command_t* command, node_t* root)
   else if(!strcmp(command->command, "exit"))
   {
     //DO NOTHING
+    printf("Cleanup Time %fs\nRead Time %fs\nExecution Time %f\n", cleanupTime, readTime, executionTime);
   }
   else
   {
@@ -383,21 +366,17 @@ void cleanupCommand(command_t* command)
     if(command->command != NULL)
     {
       free(command->command);
-      free(command->name_key);
-      free(command->name_len);
       //Libero il contentuto del percorso
       if(command->path != NULL)
       {
         int j = 0;
-        while(command->path[j] != NULL)
+        for(; j < command->pathLen && command->path[j] != NULL; j++)
         {
           if(!keepLastPath)
             free(command->path[j]);
           else if(command->path[j+1] != NULL)
             free(command->path[j]);
-          j++;
         }
-        free(command->path);
       }
 
       if(badExecution)
@@ -412,14 +391,14 @@ void cleanupCommand(command_t* command)
     }
 
     command->command = NULL;
-    command->path = NULL;
+    command->path[0] = NULL;
     command->content = NULL;
     command->count = 0;
-    command->name_key = NULL;
-    command->name_len = NULL;
+    command->name_key[0] = _FS_KEY_EMPTY_;
+    command->name_len[0] = 0;
     command->content_len = -1;
+    command->pathLen = 0;
     command->isPathValid = true;
-    command->pathBufferSize = _INITIAL_PATH_BUFFER_SIZE_;
 }
 
 int main(void)
@@ -435,14 +414,14 @@ int main(void)
 
   command_t command;
   command.command = NULL;
-  command.path = NULL;
+  command.path[0] = NULL;
   command.content = NULL;
   command.count = 0;
-  command.name_key = NULL;
-  command.name_len = NULL;
+  command.name_key[0] = _FS_KEY_EMPTY_;
+  command.name_len[0] = 0;
   command.content_len = -1;
+  command.pathLen = 0;
   command.isPathValid = true;
-  command.pathBufferSize = _INITIAL_PATH_BUFFER_SIZE_;
 
   do
   {
